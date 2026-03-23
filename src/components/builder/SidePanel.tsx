@@ -3,6 +3,10 @@
 import { Separator } from "@/components/ui/separator";
 import { VersionSelector } from "./VersionSelector";
 import { ColorSection } from "./ColorSection";
+import { SizeControls } from "./SizeControls";
+import { AdvancedControls } from "./AdvancedControls";
+import { IconSourceTabs } from "./IconSourceTabs";
+import { getVersionConfig } from "@/lib/odoo-versions";
 import type { IconConfig } from "@/types/icon-config";
 
 interface SidePanelProps {
@@ -11,6 +15,8 @@ interface SidePanelProps {
 }
 
 export function SidePanel({ config, onUpdate }: SidePanelProps) {
+  const versionDefaults = getVersionConfig(config.odooVersion);
+
   return (
     <div className="space-y-4">
       {/* Title */}
@@ -29,12 +35,48 @@ export function SidePanel({ config, onUpdate }: SidePanelProps) {
 
       <Separator />
 
+      {/* Icon source tabs */}
+      <IconSourceTabs
+        source={config.source}
+        onSourceChange={(source) => onUpdate({ source })}
+      />
+
+      <Separator />
+
       {/* Color controls */}
       <ColorSection
         backgroundColor={config.backgroundColor}
         iconColor={config.iconColor}
         onBackgroundChange={(color) => onUpdate({ backgroundColor: color })}
         onIconColorChange={(color) => onUpdate({ iconColor: color })}
+      />
+
+      <Separator />
+
+      {/* Size controls */}
+      <SizeControls
+        iconWidth={config.iconWidth}
+        fontSize={config.fontSize}
+        fontWeight={config.fontWeight}
+        onIconWidthChange={(iconWidth) => onUpdate({ iconWidth })}
+        onFontSizeChange={(fontSize) => onUpdate({ fontSize })}
+        onFontWeightChange={(fontWeight) => onUpdate({ fontWeight })}
+      />
+
+      <Separator />
+
+      {/* Advanced controls */}
+      <AdvancedControls
+        gradientIntensity={config.gradientIntensity}
+        shadowIntensity={config.shadowIntensity}
+        cornerRadiusOverride={config.cornerRadiusOverride}
+        iconWidth={config.iconWidth}
+        defaults={{
+          gradientAlpha: versionDefaults.gradientAlpha,
+          innerShadowAlpha: versionDefaults.innerShadowAlpha,
+          cornerRadiusPercent: versionDefaults.cornerRadiusPercent,
+        }}
+        onChange={(updates) => onUpdate(updates)}
       />
     </div>
   );

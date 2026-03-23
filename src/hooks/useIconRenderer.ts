@@ -3,6 +3,9 @@ import { useRef, useEffect } from "react";
 import type { RefObject } from "react";
 import type { IconConfig } from "@/types/icon-config";
 import { IconRenderer } from "@/lib/icon-renderer";
+import { loadGoogleFont } from "@/lib/fonts";
+
+const SYSTEM_FONTS = ["Arial", "Georgia", "Verdana", "Courier New", "Times New Roman"];
 
 export function useIconRenderer(
   config: IconConfig,
@@ -12,7 +15,19 @@ export function useIconRenderer(
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    let cancelled = false;
+
+    async function doRender() {
+      // Load Google Font if needed before rendering
+      if (
+        config.source.type === "text" &&
+        !SYSTEM_FONTS.includes(config.source.fontFamily)
+      ) {
+        await loadGoogleFont(config.source.fontFamily);
+      }
+
+      if (cancelled) return;
+
       const container = containerRef.current;
       if (!container) return;
 
@@ -28,9 +43,16 @@ export function useIconRenderer(
       }
 
       canvasRef.current = canvas;
+    }
+
+    const timer = setTimeout(() => {
+      doRender();
     }, 16);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [config, containerRef]);
 
   return canvasRef;
