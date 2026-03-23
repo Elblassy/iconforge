@@ -5,6 +5,7 @@ import { useIconRenderer } from "@/hooks/useIconRenderer";
 import { Button } from "@/components/ui/button";
 import { downloadSvg } from "@/lib/svg-renderer";
 import { BatchExport } from "./BatchExport";
+import { saveIcon } from "@/lib/storage";
 
 interface IconCanvasProps {
   config: IconConfig;
@@ -23,6 +24,15 @@ export function IconCanvas({ config }: IconCanvasProps) {
     link.href = dataUrl;
     link.download = "odoo-icon.png";
     link.click();
+  };
+
+  const handleSaveLocally = () => {
+    const canvas = containerRef.current?.querySelector("canvas");
+    if (!canvas) return;
+    const name = window.prompt("Name this icon:", "My Icon");
+    if (!name) return;
+    const thumbnail = canvas.toDataURL("image/png");
+    saveIcon(name.trim() || "My Icon", config, thumbnail);
   };
 
   const handleCopyToClipboard = async () => {
@@ -94,6 +104,9 @@ export function IconCanvas({ config }: IconCanvasProps) {
           Copy to Clipboard
         </Button>
         <BatchExport config={config} />
+        <Button variant="outline" size="sm" onClick={handleSaveLocally}>
+          Save Locally
+        </Button>
       </div>
     </div>
   );
