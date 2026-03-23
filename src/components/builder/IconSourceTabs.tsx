@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { IconSource } from "@/types/icon-config";
 import { TextInput } from "./TextInput";
+import { IconPicker } from "./IconPicker";
 
 interface IconSourceTabsProps {
   source: IconSource;
@@ -38,7 +39,17 @@ export function IconSourceTabs({ source, onSourceChange }: IconSourceTabsProps) 
       </TabsList>
 
       <TabsContent value="icon" className="pt-3">
-        <p className="text-sm text-muted-foreground">Icon picker coming soon...</p>
+        <IconPicker
+          selectedClass={source.type === "icon" ? source.iconClass : ""}
+          onSelect={(iconClass, unicode, iconSet) =>
+            onSourceChange({
+              type: "icon",
+              iconSet,
+              iconClass,
+              unicodeChar: unicode,
+            })
+          }
+        />
       </TabsContent>
 
       <TabsContent value="text" className="pt-3">
