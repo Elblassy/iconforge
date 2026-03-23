@@ -90,6 +90,7 @@ export function loadIconSetCSS(setId: string): Promise<void> {
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = set.cssUrl;
+    link.crossOrigin = "anonymous";
 
     const timer = setTimeout(() => {
       reject(new Error(`Timed out loading CSS for icon set: ${setId}`));
@@ -175,14 +176,9 @@ export async function loadIconSetMetadata(setId: string): Promise<IconMeta[]> {
 
       if (!rules) continue;
 
-      // Check if this sheet is relevant to our icon set
+      // Only parse stylesheets from our icon set's CDN URL
       const sheetHref = sheet.href || "";
-      if (set.cssUrl && sheetHref && !sheetHref.includes(set.prefix) &&
-          !sheetHref.includes(set.id) &&
-          !sheetHref.includes(set.fontFamily.replace(/\s+/g, "-").toLowerCase())) {
-        // Quick check: does this sheet's href match the icon set's CSS URL?
-        if (sheetHref !== set.cssUrl) continue;
-      }
+      if (sheetHref && sheetHref !== set.cssUrl) continue;
 
       for (const rule of Array.from(rules)) {
         if (!(rule instanceof CSSStyleRule)) continue;
