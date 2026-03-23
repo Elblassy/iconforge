@@ -92,8 +92,7 @@ export function loadIconSetCSS(setId: string): Promise<void> {
     link.href = set.cssUrl;
 
     const timer = setTimeout(() => {
-      loadedCSSUrls.add(set.cssUrl);
-      document.fonts.ready.then(() => resolve()).catch(() => resolve());
+      reject(new Error(`Timed out loading CSS for icon set: ${setId}`));
     }, 5000);
 
     link.onload = () => {

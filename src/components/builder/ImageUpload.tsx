@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface ImageUploadProps {
   imageDataUrl: string;
@@ -32,22 +33,13 @@ export function ImageUpload({ imageDataUrl, onImageChange }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  function showError(msg: string) {
-    if (typeof window !== "undefined" && "sonner" in window) {
-      // @ts-expect-error sonner not typed globally
-      window.sonner?.toast?.error?.(msg);
-    } else {
-      console.warn("[ImageUpload]", msg);
-    }
-  }
-
   async function processFile(file: File) {
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      showError("Only PNG, JPG, and SVG files are accepted.");
+      toast.error("Please upload a PNG, JPG, or SVG file");
       return;
     }
     if (file.size > MAX_SIZE_BYTES) {
-      showError("File is too large. Maximum size is 2 MB.");
+      toast.error("File must be under 2MB");
       return;
     }
 
@@ -58,7 +50,7 @@ export function ImageUpload({ imageDataUrl, onImageChange }: ImageUploadProps) {
         const png = await rasterize(raw);
         onImageChange(png);
       } catch {
-        showError("Failed to process image.");
+        toast.error("Failed to process image.");
       }
     };
     reader.readAsDataURL(file);

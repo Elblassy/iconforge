@@ -1,4 +1,5 @@
 import type { IconConfig, SavedIcon } from "@/types/icon-config";
+import { toast } from "sonner";
 
 const STORAGE_KEY = "odoo-icon-builder-saved";
 export const MAX_SAVED_ICONS = 50;
@@ -28,6 +29,9 @@ export function saveIcon(
   icons.unshift(newIcon);
   while (icons.length > MAX_SAVED_ICONS) icons.pop();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(icons));
+  if (getStorageSize() > 4 * 1024 * 1024) {
+    toast.warning("Storage is getting full. Consider deleting old icons from the gallery.");
+  }
   return newIcon;
 }
 

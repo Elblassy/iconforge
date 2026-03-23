@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, KeyboardEvent } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { getIconSets, loadIconSetMetadata } from "@/lib/icon-sets";
 import type { IconMeta } from "@/lib/icon-sets";
 import { useIconSearch } from "@/hooks/useIconSearch";
+import { toast } from "sonner";
 
 const RECENT_KEY = "odoo-icon-builder-recent";
 const MAX_RECENT = 12;
@@ -84,6 +85,8 @@ export function IconPicker({ selectedClass, onSelect }: IconPickerProps) {
       }));
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to load icons";
+      const setName = getIconSets().find((s) => s.id === setId)?.name ?? setId;
+      toast.error(`Failed to load ${setName} icons`);
       setSetStates((prev) => ({
         ...prev,
         [setId]: { ...prev[setId], loading: false, error: msg },
@@ -142,7 +145,10 @@ export function IconPicker({ selectedClass, onSelect }: IconPickerProps) {
               selectedClass={selectedClass}
               recentIcons={recentIcons}
               onSelect={(icon) => handleSelect(icon, set.id)}
-              onRetry={() => loadIcons(set.id)}
+              onRetry={() => {
+                toast.dismiss();
+                loadIcons(set.id);
+              }}
             />
           </TabsContent>
         ))}
@@ -173,12 +179,57 @@ function IconSetPanel({
   onRetry,
 }: IconSetPanelProps) {
   const filteredIcons = useIconSearch(state.icons, searchQuery);
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const COLS = 6;
 
   // Find recent icons that belong to this set
   const setRecentIcons = recentIcons.filter((r) => {
     const set = getIconSets().find((s) => s.id === setId);
     return set && r.iconSet === set.fontFamily;
   });
+
+  function handleGridKeyDown(e: KeyboardEvent<HTMLDivElement>, totalIcons: number) {
+    if (totalIcons === 0) return;
+
+    let newIndex = focusedIndex;
+
+    switch (e.key) {
+      case "ArrowRight":
+        e.preventDefault();
+        newIndex = Math.min(focusedIndex + 1, totalIcons - 1);
+        break;
+      case "ArrowLeft":
+        e.preventDefault();
+        newIndex = Math.max(focusedIndex - 1, 0);
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        newIndex = Math.min(focusedIndex + COLS, totalIcons - 1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        newIndex = Math.max(focusedIndex - COLS, 0);
+        break;
+      case "Home":
+        e.preventDefault();
+        newIndex = 0;
+        break;
+      case "End":
+        e.preventDefault();
+        newIndex = totalIcons - 1;
+        break;
+      default:
+        return;
+    }
+
+    setFocusedIndex(newIndex);
+    // Focus the button at newIndex
+    const buttons = gridRef.current?.querySelectorAll<HTMLButtonElement>('button[role="gridcell"]');
+    if (buttons && buttons[newIndex]) {
+      buttons[newIndex].focus();
+    }
+  }
 
   if (state.loading) {
     return (
@@ -216,7 +267,7 @@ function IconSetPanel({
               <p className="text-xs font-medium text-muted-foreground px-0.5">
                 Recent
               </p>
-              <div className="grid grid-cols-6 gap-1">
+              <div role="grid" aria-label="Recent icons" className="grid grid-cols-6 gap-1">
                 {setRecentIcons.map((r) => (
                   <IconButton
                     key={`recent-${r.iconClass}`}
@@ -235,15 +286,25 @@ function IconSetPanel({
 
           {/* Main icon grid */}
           {filteredIcons.length > 0 ? (
-            <div className="grid grid-cols-6 gap-1">
-              {filteredIcons.map((icon) => (
+            <div
+              ref={gridRef}
+              role="grid"
+              aria-label="Icon grid"
+              className="grid grid-cols-6 gap-1"
+              onKeyDown={(e) => handleGridKeyDown(e, filteredIcons.length)}
+            >
+              {filteredIcons.map((icon, idx) => (
                 <IconButton
                   key={icon.class}
                   iconClass={icon.class}
                   unicode={icon.unicode}
                   name={icon.name}
                   isSelected={selectedClass === icon.class}
-                  onClick={() => onSelect(icon)}
+                  onClick={() => {
+                    setFocusedIndex(idx);
+                    onSelect(icon);
+                  }}
+                  onFocus={() => setFocusedIndex(idx)}
                 />
               ))}
             </div>
@@ -264,14 +325,18 @@ interface IconButtonProps {
   name: string;
   isSelected: boolean;
   onClick: () => void;
+  onFocus?: () => void;
 }
 
-function IconButton({ iconClass, name, isSelected, onClick }: IconButtonProps) {
+function IconButton({ iconClass, name, isSelected, onClick, onFocus }: IconButtonProps) {
   return (
     <button
       type="button"
+      role="gridcell"
+      aria-label={name}
       title={name}
       onClick={onClick}
+      onFocus={onFocus}
       className={cn(
         "aspect-square flex items-center justify-center rounded border text-base transition-colors",
         "hover:bg-accent hover:text-accent-foreground",

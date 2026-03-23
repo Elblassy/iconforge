@@ -81,6 +81,7 @@ export function IconCanvas({ config }: IconCanvasProps) {
             key={level}
             variant={zoom === level ? "default" : "outline"}
             size="sm"
+            aria-label={`Zoom ${level}%`}
             onClick={() => setZoom(level)}
           >
             {level}%
@@ -90,21 +91,22 @@ export function IconCanvas({ config }: IconCanvasProps) {
 
       {/* Action bar */}
       <div className="flex flex-wrap items-center justify-center gap-2">
-        <Button variant="default" size="sm" onClick={handleDownloadPng}>
+        <Button variant="default" size="sm" aria-label="Download PNG" onClick={handleDownloadPng}>
           Download PNG
         </Button>
         <Button
           variant="outline"
           size="sm"
+          aria-label="Download SVG"
           onClick={() => downloadSvg(config)}
         >
           Download SVG
         </Button>
-        <Button variant="outline" size="sm" onClick={handleCopyToClipboard}>
+        <Button variant="outline" size="sm" aria-label="Copy to Clipboard" onClick={handleCopyToClipboard}>
           Copy to Clipboard
         </Button>
         <BatchExport config={config} />
-        <Button variant="outline" size="sm" onClick={handleSaveLocally}>
+        <Button variant="outline" size="sm" aria-label="Save Locally" onClick={handleSaveLocally}>
           Save Locally
         </Button>
       </div>
