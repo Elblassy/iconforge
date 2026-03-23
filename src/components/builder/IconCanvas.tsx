@@ -3,6 +3,8 @@ import { useRef, useState } from "react";
 import type { IconConfig } from "@/types/icon-config";
 import { useIconRenderer } from "@/hooks/useIconRenderer";
 import { Button } from "@/components/ui/button";
+import { downloadSvg } from "@/lib/svg-renderer";
+import { BatchExport } from "./BatchExport";
 
 interface IconCanvasProps {
   config: IconConfig;
@@ -77,13 +79,21 @@ export function IconCanvas({ config }: IconCanvasProps) {
       </div>
 
       {/* Action bar */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-center gap-2">
         <Button variant="default" size="sm" onClick={handleDownloadPng}>
           Download PNG
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => downloadSvg(config)}
+        >
+          Download SVG
         </Button>
         <Button variant="outline" size="sm" onClick={handleCopyToClipboard}>
           Copy to Clipboard
         </Button>
+        <BatchExport config={config} />
       </div>
     </div>
   );
