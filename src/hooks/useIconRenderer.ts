@@ -31,7 +31,30 @@ export function useIconRenderer(
       const container = containerRef.current;
       if (!container) return;
 
-      const canvas = rendererRef.current.render(config);
+      let canvas: HTMLCanvasElement;
+
+      if (
+        config.source.type === "image" &&
+        config.source.imageDataUrl
+      ) {
+        // Render using the uploaded image
+        canvas = await new Promise<HTMLCanvasElement>((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            resolve(rendererRef.current.renderWithImage(config, img));
+          };
+          img.onerror = () => {
+            // Fallback to normal render on error
+            resolve(rendererRef.current.render(config));
+          };
+          img.src = config.source.type === "image" ? config.source.imageDataUrl : "";
+        });
+      } else {
+        canvas = rendererRef.current.render(config);
+      }
+
+      if (cancelled) return;
+
       canvas.style.maxWidth = "100%";
       canvas.style.height = "auto";
 

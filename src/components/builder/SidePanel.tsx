@@ -6,6 +6,7 @@ import { ColorSection } from "./ColorSection";
 import { SizeControls } from "./SizeControls";
 import { AdvancedControls } from "./AdvancedControls";
 import { IconSourceTabs } from "./IconSourceTabs";
+import { PresetTemplates } from "./PresetTemplates";
 import { getVersionConfig } from "@/lib/odoo-versions";
 import type { IconConfig } from "@/types/icon-config";
 
@@ -24,6 +25,14 @@ export function SidePanel({ config, onUpdate }: SidePanelProps) {
         <h2 className="text-lg font-semibold text-primary">Odoo Icon Builder</h2>
         <p className="text-xs text-muted-foreground">Customize your module icon</p>
       </div>
+
+      {/* Preset templates */}
+      <PresetTemplates
+        onApply={(newConfig) => {
+          // Replace entire config
+          onUpdate(newConfig);
+        }}
+      />
 
       <Separator />
 
