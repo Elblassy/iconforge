@@ -3,9 +3,11 @@ import { useRef, useState } from "react";
 import type { IconConfig } from "@/types/icon-config";
 import { useIconRenderer } from "@/hooks/useIconRenderer";
 import { Button } from "@/components/ui/button";
-import { downloadSvg, downloadOdoo17Svg } from "@/lib/svg-renderer";
+import { downloadSvg, renderOdoo17Svg } from "@/lib/svg-renderer";
 import { BatchExport } from "./BatchExport";
 import { saveIcon } from "@/lib/storage";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 interface IconCanvasProps {
   config: IconConfig;
@@ -110,21 +112,36 @@ export function IconCanvas({ config }: IconCanvasProps) {
             SVG (with bg)
           </Button>
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
-            aria-label="Download Odoo 17+ SVG"
+            aria-label="Download Odoo 17+ Package"
             disabled={odoo17Loading}
             onClick={async () => {
               setOdoo17Loading(true);
               try {
-                await downloadOdoo17Svg(config);
+                const canvas = containerRef.current?.querySelector("canvas");
+                if (!canvas) return;
+
+                // Generate both files
+                const svgString = await renderOdoo17Svg(config);
+                const pngBlob = await new Promise<Blob>((resolve) =>
+                  canvas.toBlob((b) => resolve(b!), "image/png")
+                );
+
+                // Package as ZIP
+                const zip = new JSZip();
+                zip.file("icon.svg", svgString);
+                zip.file("icon.png", pngBlob);
+                const zipBlob = await zip.generateAsync({ type: "blob" });
+                saveAs(zipBlob, "odoo-icon.zip");
+
                 setShowOdoo17Info(true);
               } finally {
                 setOdoo17Loading(false);
               }
             }}
           >
-            {odoo17Loading ? "Loading..." : "SVG (Odoo 17+)"}
+            {odoo17Loading ? "Loading..." : "Odoo 17+ (SVG+PNG)"}
           </Button>
           <Button variant="outline" size="sm" aria-label="Copy to Clipboard" onClick={handleCopyToClipboard}>
             Copy
@@ -137,12 +154,16 @@ export function IconCanvas({ config }: IconCanvasProps) {
 
         {showOdoo17Info && (
           <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-xs text-muted-foreground w-full">
-            <p className="font-medium text-primary mb-1">Odoo 17+ SVG Format</p>
+            <p className="font-medium text-primary mb-1">Odoo 17+ Icon Package</p>
             <p>
-              This exports the icon without background on a transparent 50x50 canvas,
-              matching how Odoo 17+ handles module icons. Odoo&apos;s web client applies
-              the background color automatically and adapts it for dark/light theme.
-              Place the file at <code className="text-foreground">static/description/icon.svg</code> in your module.
+              The ZIP contains both files needed for your module:
+            </p>
+            <ul className="mt-1 space-y-0.5 list-disc list-inside">
+              <li><code className="text-foreground">icon.svg</code> — vector icon, no background (Odoo handles theme colors)</li>
+              <li><code className="text-foreground">icon.png</code> — with background (used in installer &amp; settings)</li>
+            </ul>
+            <p className="mt-1">
+              Place both in <code className="text-foreground">your_module/static/description/</code>
             </p>
             <button
               className="mt-1.5 text-primary hover:underline"
