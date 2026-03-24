@@ -5,16 +5,16 @@ import opentype from "opentype.js";
 // Cache loaded fonts to avoid re-fetching
 const fontCache = new Map<string, opentype.Font>();
 
-/** Font file URLs for each icon set (direct .woff/.ttf files) */
+/** Font file URLs — opentype.js supports .otf, .ttf, .woff (NOT .woff2) */
 const FONT_URLS: Record<string, string> = {
   "bootstrap-icons":
-    "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2",
+    "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff",
   remixicon:
-    "https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.woff2",
+    "https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.woff",
   "tabler-icons":
-    "https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/fonts/tabler-icons.woff2",
+    "https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/fonts/tabler-icons.ttf",
   "Font Awesome 6 Free":
-    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-solid-900.woff2",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-solid-900.ttf",
 };
 
 /**
@@ -28,12 +28,16 @@ async function loadFont(fontFamily: string): Promise<opentype.Font | null> {
 
   try {
     const response = await fetch(url);
+    if (!response.ok) {
+      console.warn(`Font fetch failed for ${fontFamily}: ${response.status} ${response.statusText}`);
+      return null;
+    }
     const buffer = await response.arrayBuffer();
     const font = opentype.parse(buffer);
     fontCache.set(fontFamily, font);
     return font;
   } catch (err) {
-    console.warn(`Failed to load font ${fontFamily}:`, err);
+    console.warn(`Failed to parse font ${fontFamily}:`, err);
     return null;
   }
 }
