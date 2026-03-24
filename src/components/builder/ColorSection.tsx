@@ -54,7 +54,10 @@ export function ColorSection({
 
       {/* Color palettes */}
       <div className="space-y-3">
-        <Label>Color Palettes</Label>
+        <Label>Icon Color Palettes</Label>
+        <p className="text-xs text-muted-foreground">
+          Sets the icon/glyph color (used in Odoo 17+ SVG export)
+        </p>
         {COLOR_PALETTES.map((palette) => (
           <div key={palette.name} className="space-y-1.5">
             <p className="text-xs text-muted-foreground">{palette.name}</p>
@@ -63,16 +66,15 @@ export function ColorSection({
                 <button
                   key={pair.bg}
                   type="button"
-                  aria-label={`Apply ${palette.name} color: background ${pair.bg}, foreground ${pair.fg}`}
+                  aria-label={`Apply ${palette.name} icon color ${pair.bg}`}
                   onClick={() => {
-                    onBackgroundChange(pair.bg);
-                    onIconColorChange(pair.fg);
+                    onIconColorChange(pair.bg);
                   }}
                   className="h-7 w-7 rounded-full border-2 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                   style={{
                     backgroundColor: pair.bg,
                     borderColor:
-                      backgroundColor === pair.bg ? pair.fg : "transparent",
+                      iconColor === pair.bg ? "hsl(var(--primary))" : "transparent",
                   }}
                 />
               ))}

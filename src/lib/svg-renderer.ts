@@ -1,19 +1,83 @@
 import type { IconConfig } from "@/types/icon-config";
 import { IconRenderer } from "./icon-renderer";
+import opentype from "opentype.js";
+
+// Cache loaded fonts to avoid re-fetching
+const fontCache = new Map<string, opentype.Font>();
+
+/** Font file URLs for each icon set (direct .woff/.ttf files) */
+const FONT_URLS: Record<string, string> = {
+  "bootstrap-icons":
+    "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff2",
+  remixicon:
+    "https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.woff2",
+  "tabler-icons":
+    "https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/fonts/tabler-icons.woff2",
+  "Font Awesome 6 Free":
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-solid-900.woff2",
+};
+
+/**
+ * Load a font file and parse it with opentype.js.
+ */
+async function loadFont(fontFamily: string): Promise<opentype.Font | null> {
+  if (fontCache.has(fontFamily)) return fontCache.get(fontFamily)!;
+
+  const url = FONT_URLS[fontFamily];
+  if (!url) return null;
+
+  try {
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+    const font = opentype.parse(buffer);
+    fontCache.set(fontFamily, font);
+    return font;
+  } catch (err) {
+    console.warn(`Failed to load font ${fontFamily}:`, err);
+    return null;
+  }
+}
+
+/**
+ * Get SVG path data for a unicode character from a font.
+ */
+function getGlyphPath(
+  font: opentype.Font,
+  char: string,
+  size: number
+): { pathData: string; width: number; height: number } | null {
+  const glyph = font.charToGlyph(char);
+  if (!glyph || glyph.index === 0) return null;
+
+  const unitsPerEm = font.unitsPerEm;
+  const scale = size / unitsPerEm;
+
+  const path = glyph.getPath(0, 0, size);
+  const pathData = path.toPathData(2);
+
+  const bbox = path.getBoundingBox();
+  return {
+    pathData,
+    width: (bbox.x2 - bbox.x1),
+    height: (bbox.y2 - bbox.y1),
+  };
+}
 
 /**
  * Render the icon via canvas, then wrap the result as a base64 image
- * inside an SVG. This makes the SVG fully self-contained — no external
- * fonts or resources needed.
+ * inside an SVG. This makes the SVG fully self-contained.
  */
 export function renderSvg(config: IconConfig, canvasDataUrl?: string): string {
   const size = 512;
 
-  // If no pre-rendered data URL was provided, render via canvas now
   let dataUrl = canvasDataUrl;
   if (!dataUrl) {
     const renderer = new IconRenderer();
-    const canvas = renderer.render({ ...config, iconWidth: size, fontSize: Math.round(size * (config.fontSize / config.iconWidth)) });
+    const canvas = renderer.render({
+      ...config,
+      iconWidth: size,
+      fontSize: Math.round(size * (config.fontSize / config.iconWidth)),
+    });
     dataUrl = canvas.toDataURL("image/png");
   }
 
@@ -25,77 +89,115 @@ export function renderSvg(config: IconConfig, canvasDataUrl?: string): string {
 }
 
 /**
- * Render the icon as Odoo 17+ style SVG: icon only on transparent background,
- * 50x50 viewBox. Takes a pre-rendered canvas (from the live preview where fonts
- * are already loaded) and strips the background to produce a transparent result.
+ * Render the icon as Odoo 17+ style SVG with real vector <path> elements.
+ * No background, no gradient — just the icon shape on transparent canvas.
+ * 50x50 viewBox matching Odoo's format.
  */
-export function renderOdoo17Svg(config: IconConfig, sourceCanvas: HTMLCanvasElement): string {
+export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
   const svgSize = 50;
-  const renderSize = 256;
+  const source = config.source;
 
-  // Re-render at higher res with transparent background
-  const canvas = document.createElement("canvas");
-  canvas.width = renderSize;
-  canvas.height = renderSize;
-  const ctx = canvas.getContext("2d")!;
+  if (source.type === "text") {
+    // For text mode, use SVG <text> element (system fonts are available)
+    return [
+      `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}" xmlns="http://www.w3.org/2000/svg">`,
+      `  <text x="${svgSize / 2}" y="${svgSize / 2}" text-anchor="middle" dominant-baseline="central" font-family="${escapeXml(source.fontFamily)}" font-size="${Math.round(svgSize * (config.fontSize / config.iconWidth))}" font-weight="${config.fontWeight}" fill="${escapeXml(config.iconColor)}">${escapeXml(source.text)}</text>`,
+      `</svg>`,
+    ].join("\n");
+  }
 
-  // Draw the source canvas (which has background + icon) onto our canvas
-  ctx.drawImage(sourceCanvas, 0, 0, renderSize, renderSize);
+  if (source.type === "icon") {
+    // Try to extract real SVG path from the font file
+    const char = source.unicodeChar;
+    if (char) {
+      const font = await loadFont(source.iconSet);
+      if (font) {
+        const glyphInfo = getGlyphPath(font, char, svgSize);
+        if (glyphInfo && glyphInfo.pathData) {
+          // Center the glyph in the 50x50 viewBox
+          const path = font.charToGlyph(char).getPath(0, 0, svgSize * 0.8);
+          const bbox = path.getBoundingBox();
+          const glyphW = bbox.x2 - bbox.x1;
+          const glyphH = bbox.y2 - bbox.y1;
+          const offsetX = (svgSize - glyphW) / 2 - bbox.x1;
+          const offsetY = (svgSize - glyphH) / 2 - bbox.y1;
 
-  // Remove the background by making all pixels matching the bg color transparent
-  const bgColor = hexToRgb(config.backgroundColor);
-  if (bgColor) {
-    const imageData = ctx.getImageData(0, 0, renderSize, renderSize);
-    const data = imageData.data;
-    const tolerance = 60; // color distance tolerance for gradient/shadow edges
+          const centeredPath = font
+            .charToGlyph(char)
+            .getPath(offsetX, offsetY, svgSize * 0.8);
+          const centeredPathData = centeredPath.toPathData(2);
 
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-
-      // Calculate color distance from background
-      const dist = Math.sqrt(
-        (r - bgColor.r) ** 2 + (g - bgColor.g) ** 2 + (b - bgColor.b) ** 2
-      );
-
-      if (dist < tolerance) {
-        // Make background pixels fully transparent
-        data[i + 3] = 0;
-      } else if (dist < tolerance * 2) {
-        // Feather edges for smooth transition
-        const alpha = Math.round(((dist - tolerance) / tolerance) * data[i + 3]);
-        data[i + 3] = Math.min(alpha, data[i + 3]);
+          return [
+            `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}" xmlns="http://www.w3.org/2000/svg">`,
+            `  <path d="${centeredPathData}" fill="${escapeXml(config.iconColor)}"/>`,
+            `</svg>`,
+          ].join("\n");
+        }
       }
     }
 
-    ctx.putImageData(imageData, 0, 0);
+    // Fallback: resolve unicode from DOM and try again
+    if (!char && typeof document !== "undefined") {
+      const el = document.createElement("i");
+      el.className = source.iconClass;
+      el.style.cssText =
+        "position:absolute;top:-9999px;visibility:hidden";
+      document.body.appendChild(el);
+      const content = window
+        .getComputedStyle(el, "::before")
+        .getPropertyValue("content");
+      document.body.removeChild(el);
+      const resolved = content?.replace(/^["']|["']$/g, "");
+      if (resolved && resolved !== "none") {
+        const font = await loadFont(source.iconSet);
+        if (font) {
+          const path = font.charToGlyph(resolved).getPath(0, 0, svgSize * 0.8);
+          const bbox = path.getBoundingBox();
+          const glyphW = bbox.x2 - bbox.x1;
+          const glyphH = bbox.y2 - bbox.y1;
+          const offsetX = (svgSize - glyphW) / 2 - bbox.x1;
+          const offsetY = (svgSize - glyphH) / 2 - bbox.y1;
+          const centeredPath = font
+            .charToGlyph(resolved)
+            .getPath(offsetX, offsetY, svgSize * 0.8);
+          const centeredPathData = centeredPath.toPathData(2);
+
+          if (centeredPathData) {
+            return [
+              `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}" xmlns="http://www.w3.org/2000/svg">`,
+              `  <path d="${centeredPathData}" fill="${escapeXml(config.iconColor)}"/>`,
+              `</svg>`,
+            ].join("\n");
+          }
+        }
+      }
+    }
   }
 
-  const dataUrl = canvas.toDataURL("image/png");
-
+  // Ultimate fallback: empty SVG with a colored circle placeholder
   return [
     `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}" xmlns="http://www.w3.org/2000/svg">`,
-    `  <image width="${svgSize}" height="${svgSize}" href="${dataUrl}" preserveAspectRatio="xMidYMid meet"/>`,
+    `  <circle cx="${svgSize / 2}" cy="${svgSize / 2}" r="${svgSize * 0.35}" fill="${escapeXml(config.iconColor)}"/>`,
     `</svg>`,
   ].join("\n");
 }
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-  const match = hex.replace("#", "").match(/.{2}/g);
-  if (!match || match.length < 3) return null;
-  return {
-    r: parseInt(match[0], 16),
-    g: parseInt(match[1], 16),
-    b: parseInt(match[2], 16),
-  };
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 /**
- * Trigger a download of the SVG string as a file.
- * Pass canvasDataUrl to embed a pre-rendered canvas (e.g. with logo overlay).
+ * Trigger a download of the SVG string as a file (with background).
  */
-export function downloadSvg(config: IconConfig, filename = "odoo-icon.svg", canvasDataUrl?: string): void {
+export function downloadSvg(
+  config: IconConfig,
+  filename = "odoo-icon.svg",
+  canvasDataUrl?: string
+): void {
   const svgString = renderSvg(config, canvasDataUrl);
   const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -107,10 +209,13 @@ export function downloadSvg(config: IconConfig, filename = "odoo-icon.svg", canv
 }
 
 /**
- * Download as Odoo 17+ format: transparent background, 50x50, icon-only.
+ * Download as Odoo 17+ format: real SVG paths, transparent bg, 50x50.
  */
-export function downloadOdoo17Svg(config: IconConfig, sourceCanvas: HTMLCanvasElement, filename = "icon.svg"): void {
-  const svgString = renderOdoo17Svg(config, sourceCanvas);
+export async function downloadOdoo17Svg(
+  config: IconConfig,
+  filename = "icon.svg"
+): Promise<void> {
+  const svgString = await renderOdoo17Svg(config);
   const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
