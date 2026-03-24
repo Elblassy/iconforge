@@ -68,9 +68,12 @@ export function IconPicker({ selectedClass, onSelect }: IconPickerProps) {
       iconSets.map((s) => [s.id, { icons: [], loading: false, error: null }])
     )
   );
-  const [recentIcons, setRecentIcons] = useState<RecentIcon[]>(() =>
-    loadRecentIcons()
-  );
+  const [recentIcons, setRecentIcons] = useState<RecentIcon[]>([]);
+
+  // Load recent icons from localStorage after mount to avoid hydration mismatch
+  useEffect(() => {
+    setRecentIcons(loadRecentIcons());
+  }, []);
 
   const loadIcons = useCallback(async (setId: string) => {
     setSetStates((prev) => ({
