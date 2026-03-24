@@ -113,8 +113,10 @@ export function IconCanvas({ config }: IconCanvasProps) {
             size="sm"
             aria-label="Download Odoo 17+ SVG"
             onClick={() => {
+              const canvas = containerRef.current?.querySelector("canvas");
+              if (!canvas) return;
               setShowOdoo17Info(true);
-              downloadOdoo17Svg(config);
+              downloadOdoo17Svg(config, canvas);
             }}
           >
             SVG (Odoo 17+)
