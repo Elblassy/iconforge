@@ -86,8 +86,10 @@ export function useIconRenderer(
 
         if (cancelled) return;
 
-        canvas.style.maxWidth = "100%";
-        canvas.style.height = "auto";
+        // Display at 256px CSS size (2x) for a clear preview, actual pixels stay at 128
+        canvas.style.width = "256px";
+        canvas.style.height = "256px";
+        canvas.style.imageRendering = "auto";
 
         const existing = container.querySelector("canvas");
         if (existing) {
