@@ -20,6 +20,10 @@ export class IconRenderer {
         ? config.cornerRadiusOverride
         : size * versionConfig.cornerRadiusPercent;
 
+    // Clip everything to the rounded rect so shadows/gradient respect corners
+    this._roundedRectPath(ctx, 0, 0, size, size, cornerRadius);
+    ctx.clip();
+
     this.drawBackground(ctx, size, cornerRadius, config.backgroundColor);
 
     if (versionConfig.hasHardShadow) {
@@ -46,7 +50,6 @@ export class IconRenderer {
 
   /**
    * Draw a company logo overlay image onto the canvas.
-   * A subtle white rounded-rect background is drawn behind the logo for visibility.
    */
   drawLogoOverlay(
     ctx: CanvasRenderingContext2D,
@@ -59,9 +62,6 @@ export class IconRenderer {
 
     const logoSize = size * (overlay.size / 100);
     const padding = size * 0.05;
-    const bgPadding = logoSize * 0.12;
-    const bgSize = logoSize + bgPadding * 2;
-    const bgRadius = bgSize * 0.2;
 
     let x: number;
     let y: number;
@@ -92,17 +92,6 @@ export class IconRenderer {
         y = padding;
     }
 
-    const bgX = x - bgPadding;
-    const bgY = y - bgPadding;
-
-    // Draw white rounded-rect background
-    ctx.save();
-    ctx.globalAlpha = 0.92;
-    ctx.fillStyle = "#ffffff";
-    this._roundedRectPath(ctx, bgX, bgY, bgSize, bgSize, bgRadius);
-    ctx.fill();
-    ctx.restore();
-
     // Draw logo image
     ctx.save();
     ctx.drawImage(logoImage, x, y, logoSize, logoSize);
@@ -115,15 +104,11 @@ export class IconRenderer {
   drawBackground(
     ctx: CanvasRenderingContext2D,
     size: number,
-    radius: number,
+    _radius: number,
     color: string
   ): void {
-    ctx.save();
-    this._roundedRectPath(ctx, 0, 0, size, size, radius);
-    ctx.clip();
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, size, size);
-    ctx.restore();
   }
 
   /**

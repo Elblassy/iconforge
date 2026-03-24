@@ -137,9 +137,6 @@ export function renderSvg(config: IconConfig): string {
     const overlay = config.logoOverlay;
     const logoSize = size * (overlay.size / 100);
     const padding = size * 0.05;
-    const bgPadding = logoSize * 0.12;
-    const bgSize = logoSize + bgPadding * 2;
-    const bgRadius = bgSize * 0.2;
 
     let logoX: number;
     let logoY: number;
@@ -170,15 +167,6 @@ export function renderSvg(config: IconConfig): string {
         logoY = padding;
     }
 
-    const bgX = logoX - bgPadding;
-    const bgY = logoY - bgPadding;
-
-    // White background rounded rect
-    parts.push(
-      `    <rect x="${bgX.toFixed(2)}" y="${bgY.toFixed(2)}" width="${bgSize.toFixed(2)}" height="${bgSize.toFixed(2)}" rx="${bgRadius.toFixed(2)}" ry="${bgRadius.toFixed(2)}" fill="white" opacity="0.92"/>`
-    );
-
-    // Logo image element
     parts.push(
       `    <image href="${overlay.imageDataUrl}" x="${logoX.toFixed(2)}" y="${logoY.toFixed(2)}" width="${logoSize.toFixed(2)}" height="${logoSize.toFixed(2)}" preserveAspectRatio="xMidYMid meet"/>`
     );
