@@ -2,55 +2,87 @@
 
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import type { MultiColorMode } from "@/types/icon-config";
+import type { IconColorMode, IconColorConfig } from "@/types/icon-config";
 
 interface MultiColorControlsProps {
-  mode: MultiColorMode;
-  iconColor: string;
-  color2: string;
-  color3: string;
-  onModeChange: (mode: MultiColorMode) => void;
-  onIconColorChange: (color: string) => void;
-  onColor2Change: (color: string) => void;
-  onColor3Change: (color: string) => void;
+  colorConfig: IconColorConfig;
+  onChange: (config: IconColorConfig) => void;
 }
 
-const MODE_OPTIONS: { value: MultiColorMode; label: string; desc: string }[] = [
-  { value: "single", label: "Single", desc: "One color" },
-  { value: "duo", label: "Duo", desc: "2 colors (like Odoo Stock)" },
-  { value: "trio", label: "Trio", desc: "3 colors (like Odoo Sales)" },
+const MODES: {
+  value: IconColorMode;
+  label: string;
+  icon: React.ReactNode;
+}[] = [
+  {
+    value: "solid",
+    label: "Solid",
+    icon: <SolidPreview />,
+  },
+  {
+    value: "gradient-diagonal",
+    label: "Gradient",
+    icon: <GradientPreview direction="diagonal" />,
+  },
+  {
+    value: "gradient-horizontal",
+    label: "H-Gradient",
+    icon: <GradientPreview direction="horizontal" />,
+  },
+  {
+    value: "gradient-vertical",
+    label: "V-Gradient",
+    icon: <GradientPreview direction="vertical" />,
+  },
+  {
+    value: "split-horizontal",
+    label: "H-Split",
+    icon: <SplitPreview direction="horizontal" />,
+  },
+  {
+    value: "split-vertical",
+    label: "V-Split",
+    icon: <SplitPreview direction="vertical" />,
+  },
+  {
+    value: "split-diagonal",
+    label: "D-Split",
+    icon: <SplitPreview direction="diagonal" />,
+  },
+  {
+    value: "gradient-radial",
+    label: "Radial",
+    icon: <RadialPreview />,
+  },
 ];
 
 export function MultiColorControls({
-  mode,
-  iconColor,
-  color2,
-  color3,
-  onModeChange,
-  onIconColorChange,
-  onColor2Change,
-  onColor3Change,
+  colorConfig,
+  onChange,
 }: MultiColorControlsProps) {
+  const isTwoColor = colorConfig.mode !== "solid";
+
   return (
     <div className="space-y-3">
-      <Label>Icon Colors</Label>
-      <p className="text-xs text-muted-foreground">
-        Odoo 17+ icons use multiple colors for a layered look
-      </p>
+      <Label>Icon Color Style</Label>
 
-      {/* Mode selector */}
-      <div className="flex gap-1">
-        {MODE_OPTIONS.map((opt) => (
-          <Button
-            key={opt.value}
-            variant={mode === opt.value ? "default" : "outline"}
-            size="sm"
-            className="flex-1 text-xs"
-            onClick={() => onModeChange(opt.value)}
-            title={opt.desc}
+      {/* Mode grid */}
+      <div className="grid grid-cols-4 gap-1.5">
+        {MODES.map((m) => (
+          <button
+            key={m.value}
+            type="button"
+            onClick={() => onChange({ ...colorConfig, mode: m.value })}
+            className={`flex flex-col items-center gap-1 rounded-md border p-1.5 transition-colors text-[10px] ${
+              colorConfig.mode === m.value
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border hover:border-muted-foreground text-muted-foreground"
+            }`}
+            title={m.label}
           >
-            {opt.label}
-          </Button>
+            {m.icon}
+            <span className="truncate w-full text-center">{m.label}</span>
+          </button>
         ))}
       </div>
 
@@ -59,63 +91,148 @@ export function MultiColorControls({
         <div className="flex items-center gap-2">
           <input
             type="color"
-            value={iconColor}
-            onChange={(e) => onIconColorChange(e.target.value)}
+            value={colorConfig.color1}
+            onChange={(e) =>
+              onChange({ ...colorConfig, color1: e.target.value })
+            }
             className="h-8 w-8 cursor-pointer rounded border border-input p-0.5"
           />
           <span className="font-mono text-xs text-muted-foreground">
-            Color 1: {iconColor.toUpperCase()}
+            {isTwoColor ? "Color 1" : "Color"}: {colorConfig.color1.toUpperCase()}
           </span>
         </div>
 
-        {(mode === "duo" || mode === "trio") && (
+        {isTwoColor && (
           <div className="flex items-center gap-2">
             <input
               type="color"
-              value={color2}
-              onChange={(e) => onColor2Change(e.target.value)}
+              value={colorConfig.color2}
+              onChange={(e) =>
+                onChange({ ...colorConfig, color2: e.target.value })
+              }
               className="h-8 w-8 cursor-pointer rounded border border-input p-0.5"
             />
             <span className="font-mono text-xs text-muted-foreground">
-              Color 2: {color2.toUpperCase()}
-            </span>
-          </div>
-        )}
-
-        {mode === "trio" && (
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={color3}
-              onChange={(e) => onColor3Change(e.target.value)}
-              className="h-8 w-8 cursor-pointer rounded border border-input p-0.5"
-            />
-            <span className="font-mono text-xs text-muted-foreground">
-              Color 3: {color3.toUpperCase()}
+              Color 2: {colorConfig.color2.toUpperCase()}
             </span>
           </div>
         )}
       </div>
 
-      {/* Preview swatches */}
-      <div className="flex items-center gap-1">
-        <div
-          className="h-6 flex-1 rounded"
-          style={{ backgroundColor: iconColor }}
+      {/* Live preview swatch */}
+      <div className="flex items-center gap-2">
+        <Label className="text-xs">Preview:</Label>
+        <ColorPreviewSwatch
+          mode={colorConfig.mode}
+          color1={colorConfig.color1}
+          color2={colorConfig.color2}
         />
-        {(mode === "duo" || mode === "trio") && (
-          <div
-            className="h-6 flex-1 rounded"
-            style={{ backgroundColor: color2 }}
-          />
-        )}
-        {mode === "trio" && (
-          <div
-            className="h-6 flex-1 rounded"
-            style={{ backgroundColor: color3 }}
-          />
-        )}
       </div>
     </div>
+  );
+}
+
+// ── Mini mode preview icons ──
+
+function SolidPreview() {
+  return (
+    <div className="h-5 w-5 rounded-sm bg-current opacity-80" />
+  );
+}
+
+function GradientPreview({ direction }: { direction: "diagonal" | "horizontal" | "vertical" }) {
+  const angle = direction === "horizontal" ? "90deg" : direction === "vertical" ? "180deg" : "135deg";
+  return (
+    <div
+      className="h-5 w-5 rounded-sm"
+      style={{ background: `linear-gradient(${angle}, currentColor 0%, transparent 100%)` }}
+    />
+  );
+}
+
+function SplitPreview({ direction }: { direction: "horizontal" | "vertical" | "diagonal" }) {
+  if (direction === "horizontal") {
+    return (
+      <div className="flex h-5 w-5 overflow-hidden rounded-sm">
+        <div className="flex-1 bg-current opacity-80" />
+        <div className="flex-1 bg-current opacity-40" />
+      </div>
+    );
+  }
+  if (direction === "vertical") {
+    return (
+      <div className="flex flex-col h-5 w-5 overflow-hidden rounded-sm">
+        <div className="flex-1 bg-current opacity-80" />
+        <div className="flex-1 bg-current opacity-40" />
+      </div>
+    );
+  }
+  // diagonal
+  return (
+    <div
+      className="h-5 w-5 rounded-sm"
+      style={{
+        background: "linear-gradient(135deg, currentColor 50%, transparent 50%)",
+      }}
+    />
+  );
+}
+
+function RadialPreview() {
+  return (
+    <div
+      className="h-5 w-5 rounded-sm"
+      style={{
+        background: "radial-gradient(circle, currentColor 30%, transparent 80%)",
+      }}
+    />
+  );
+}
+
+function ColorPreviewSwatch({
+  mode,
+  color1,
+  color2,
+}: {
+  mode: IconColorMode;
+  color1: string;
+  color2: string;
+}) {
+  let bg: string;
+
+  switch (mode) {
+    case "solid":
+      bg = color1;
+      break;
+    case "gradient-diagonal":
+      bg = `linear-gradient(135deg, ${color1}, ${color2})`;
+      break;
+    case "gradient-horizontal":
+      bg = `linear-gradient(90deg, ${color1}, ${color2})`;
+      break;
+    case "gradient-vertical":
+      bg = `linear-gradient(180deg, ${color1}, ${color2})`;
+      break;
+    case "gradient-radial":
+      bg = `radial-gradient(circle, ${color1}, ${color2})`;
+      break;
+    case "split-horizontal":
+      bg = `linear-gradient(90deg, ${color1} 50%, ${color2} 50%)`;
+      break;
+    case "split-vertical":
+      bg = `linear-gradient(180deg, ${color1} 50%, ${color2} 50%)`;
+      break;
+    case "split-diagonal":
+      bg = `linear-gradient(135deg, ${color1} 50%, ${color2} 50%)`;
+      break;
+    default:
+      bg = color1;
+  }
+
+  return (
+    <div
+      className="h-6 flex-1 rounded-md border border-border"
+      style={{ background: bg }}
+    />
   );
 }

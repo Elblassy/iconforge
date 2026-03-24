@@ -10,7 +10,7 @@ import { PresetTemplates } from "./PresetTemplates";
 import { LogoOverlay } from "./LogoOverlay";
 import { MultiColorControls } from "./MultiColorControls";
 import { getVersionConfig } from "@/lib/odoo-versions";
-import type { IconConfig, MultiColorMode } from "@/types/icon-config";
+import type { IconConfig, IconColorConfig } from "@/types/icon-config";
 
 interface SidePanelProps {
   config: IconConfig;
@@ -19,6 +19,19 @@ interface SidePanelProps {
 
 export function SidePanel({ config, onUpdate }: SidePanelProps) {
   const versionDefaults = getVersionConfig(config.odooVersion);
+
+  const colorConfig: IconColorConfig = config.colorConfig ?? {
+    mode: "solid",
+    color1: config.iconColor,
+    color2: "#F86126",
+  };
+
+  function handleColorConfigChange(cc: IconColorConfig) {
+    onUpdate({
+      colorConfig: cc,
+      iconColor: cc.color1, // keep iconColor in sync
+    });
+  }
 
   return (
     <div className="space-y-4">
@@ -30,10 +43,7 @@ export function SidePanel({ config, onUpdate }: SidePanelProps) {
 
       {/* Preset templates */}
       <PresetTemplates
-        onApply={(newConfig) => {
-          // Replace entire config
-          onUpdate(newConfig);
-        }}
+        onApply={(newConfig) => onUpdate(newConfig)}
       />
 
       <Separator />
@@ -62,40 +72,10 @@ export function SidePanel({ config, onUpdate }: SidePanelProps) {
 
       <Separator />
 
-      {/* Multi-color controls (for Odoo 17+ SVG) */}
+      {/* Icon color style (solid, gradient, split) */}
       <MultiColorControls
-        mode={config.multiColor?.mode ?? "single"}
-        iconColor={config.iconColor}
-        color2={config.multiColor?.color2 ?? "#F86126"}
-        color3={config.multiColor?.color3 ?? "#FBB945"}
-        onModeChange={(mode: MultiColorMode) =>
-          onUpdate({
-            multiColor: {
-              mode,
-              color2: config.multiColor?.color2 ?? "#F86126",
-              color3: config.multiColor?.color3 ?? "#FBB945",
-            },
-          })
-        }
-        onIconColorChange={(color) => onUpdate({ iconColor: color })}
-        onColor2Change={(color2) =>
-          onUpdate({
-            multiColor: {
-              mode: config.multiColor?.mode ?? "duo",
-              color2,
-              color3: config.multiColor?.color3 ?? "#FBB945",
-            },
-          })
-        }
-        onColor3Change={(color3) =>
-          onUpdate({
-            multiColor: {
-              mode: config.multiColor?.mode ?? "trio",
-              color2: config.multiColor?.color2 ?? "#F86126",
-              color3,
-            },
-          })
-        }
+        colorConfig={colorConfig}
+        onChange={handleColorConfigChange}
       />
 
       <Separator />
@@ -105,7 +85,12 @@ export function SidePanel({ config, onUpdate }: SidePanelProps) {
         backgroundColor={config.backgroundColor}
         iconColor={config.iconColor}
         onBackgroundChange={(color) => onUpdate({ backgroundColor: color })}
-        onIconColorChange={(color) => onUpdate({ iconColor: color })}
+        onIconColorChange={(color) =>
+          onUpdate({
+            iconColor: color,
+            colorConfig: { ...colorConfig, color1: color },
+          })
+        }
       />
 
       <Separator />

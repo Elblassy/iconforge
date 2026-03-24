@@ -1,4 +1,4 @@
-import type { IconConfig, LogoOverlay, OdooVersionConfig } from "@/types/icon-config";
+import type { IconConfig, IconColorConfig, LogoOverlay, OdooVersionConfig } from "@/types/icon-config";
 import { getVersionConfig } from "./odoo-versions";
 import { shadeColor, hexToRgba } from "./color-utils";
 
@@ -144,7 +144,7 @@ export class IconRenderer {
     ctx.shadowBlur = size * 0.04;
     ctx.shadowColor = hexToRgba("#000000", versionConfig.dropShadowAlpha);
 
-    this.drawText(ctx, config, size / 2, size / 2, config.iconColor);
+    this.drawText(ctx, config, size / 2, size / 2, config.iconColor, true);
 
     ctx.restore();
   }
@@ -152,31 +152,47 @@ export class IconRenderer {
   /**
    * Draw text (or icon glyph) onto the canvas at (x, y).
    * Source type "image" is skipped here (handled separately via renderWithImage).
+   *
+   * When `color` is a plain string, it's used as a solid fill.
+   * When `useColorConfig` is true, the icon's colorConfig is used to create
+   * gradients/splits (only for the main icon draw, not for shadows).
    */
   drawText(
     ctx: CanvasRenderingContext2D,
     config: IconConfig,
     x: number,
     y: number,
-    color: string
+    color: string,
+    useColorConfig = false
   ): void {
     const { source, fontSize, fontWeight } = config;
 
     if (source.type === "image") {
-      // Images are drawn separately in renderWithImage
       return;
     }
 
     ctx.save();
-    ctx.fillStyle = color;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
+    // Set font
     if (source.type === "text") {
       ctx.font = `${fontWeight} ${fontSize}px "${source.fontFamily}"`;
-      ctx.fillText(source.text, x, y);
     } else if (source.type === "icon") {
       ctx.font = `${fontWeight} ${fontSize}px "${source.iconSet}"`;
+    }
+
+    // Determine fill style
+    if (useColorConfig && config.colorConfig && config.colorConfig.mode !== "solid") {
+      ctx.fillStyle = this._createColorFill(ctx, config.colorConfig, config.iconWidth);
+    } else {
+      ctx.fillStyle = color;
+    }
+
+    // Draw
+    if (source.type === "text") {
+      ctx.fillText(source.text, x, y);
+    } else if (source.type === "icon") {
       const glyph = source.unicodeChar || this._resolveIconUnicode(source.iconClass);
       if (glyph) {
         ctx.fillText(glyph, x, y);
@@ -287,6 +303,73 @@ export class IconRenderer {
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
+
+  /**
+   * Create a CanvasGradient or CanvasPattern based on the color config.
+   */
+  private _createColorFill(
+    ctx: CanvasRenderingContext2D,
+    cc: IconColorConfig,
+    size: number
+  ): string | CanvasGradient {
+    let gradient: CanvasGradient;
+
+    switch (cc.mode) {
+      case "gradient-diagonal":
+        gradient = ctx.createLinearGradient(0, size, size, 0);
+        gradient.addColorStop(0, cc.color1);
+        gradient.addColorStop(1, cc.color2);
+        return gradient;
+
+      case "gradient-horizontal":
+        gradient = ctx.createLinearGradient(0, 0, size, 0);
+        gradient.addColorStop(0, cc.color1);
+        gradient.addColorStop(1, cc.color2);
+        return gradient;
+
+      case "gradient-vertical":
+        gradient = ctx.createLinearGradient(0, 0, 0, size);
+        gradient.addColorStop(0, cc.color1);
+        gradient.addColorStop(1, cc.color2);
+        return gradient;
+
+      case "gradient-radial":
+        gradient = ctx.createRadialGradient(
+          size / 2, size / 2, 0,
+          size / 2, size / 2, size / 2
+        );
+        gradient.addColorStop(0, cc.color1);
+        gradient.addColorStop(1, cc.color2);
+        return gradient;
+
+      case "split-horizontal":
+        gradient = ctx.createLinearGradient(0, 0, size, 0);
+        gradient.addColorStop(0, cc.color1);
+        gradient.addColorStop(0.499, cc.color1);
+        gradient.addColorStop(0.501, cc.color2);
+        gradient.addColorStop(1, cc.color2);
+        return gradient;
+
+      case "split-vertical":
+        gradient = ctx.createLinearGradient(0, 0, 0, size);
+        gradient.addColorStop(0, cc.color1);
+        gradient.addColorStop(0.499, cc.color1);
+        gradient.addColorStop(0.501, cc.color2);
+        gradient.addColorStop(1, cc.color2);
+        return gradient;
+
+      case "split-diagonal":
+        gradient = ctx.createLinearGradient(0, size, size, 0);
+        gradient.addColorStop(0, cc.color1);
+        gradient.addColorStop(0.499, cc.color1);
+        gradient.addColorStop(0.501, cc.color2);
+        gradient.addColorStop(1, cc.color2);
+        return gradient;
+
+      default:
+        return cc.color1;
+    }
+  }
 
   /**
    * Resolve a CSS icon class to its unicode character via the DOM.
