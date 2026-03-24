@@ -16,8 +16,8 @@ describe("IconRenderer", () => {
   describe("render()", () => {
     it("returns a canvas with default dimensions (300x300)", () => {
       const canvas = renderer.render(TEST_CONFIG);
-      expect(canvas.width).toBe(300);
-      expect(canvas.height).toBe(300);
+      expect(canvas.width).toBe(128);
+      expect(canvas.height).toBe(128);
     });
 
     it("returns a canvas with custom dimensions (512x512)", () => {
@@ -50,7 +50,7 @@ describe("IconRenderer", () => {
         };
         const canvas = renderer.render(config);
         expect(canvas).toBeTruthy();
-        expect(canvas.width).toBe(300);
+        expect(canvas.width).toBe(128);
       }
     });
 
@@ -74,7 +74,7 @@ describe("IconRenderer", () => {
     it("renders with hard shadow for version 16.0", () => {
       const config: IconConfig = { ...TEST_CONFIG, odooVersion: "16.0" };
       const canvas = renderer.render(config);
-      expect(canvas.width).toBe(300);
+      expect(canvas.width).toBe(128);
     });
 
     it("renders with icon source type without throwing", () => {
@@ -101,8 +101,8 @@ describe("IconRenderer", () => {
     it("returns a canvas with correct dimensions", () => {
       const img = new Image();
       const canvas = renderer.renderWithImage(TEST_CONFIG, img);
-      expect(canvas.width).toBe(300);
-      expect(canvas.height).toBe(300);
+      expect(canvas.width).toBe(128);
+      expect(canvas.height).toBe(128);
     });
 
     it("exports to a data URL starting with data:image/png;base64,", () => {

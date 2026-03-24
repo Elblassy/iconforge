@@ -55,6 +55,9 @@ export interface OdooVersionConfig {
   hasHardShadow: boolean;
 }
 
+/** Odoo standard module icon size */
+export const ICON_SIZE = 128;
+
 export const DEFAULT_CONFIG: IconConfig = {
   odooVersion: "18.0",
   source: {
@@ -64,7 +67,7 @@ export const DEFAULT_CONFIG: IconConfig = {
   },
   backgroundColor: "#714BC2",
   iconColor: "#ffffff",
-  iconWidth: 300,
-  fontSize: 150,
+  iconWidth: ICON_SIZE,
+  fontSize: 64,
   fontWeight: 900,
 };

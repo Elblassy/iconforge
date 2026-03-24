@@ -4,13 +4,13 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { ICON_SIZE } from "@/types/icon-config";
 import type { OdooVersionConfig } from "@/types/icon-config";
 
 interface AdvancedControlsProps {
   gradientIntensity?: number;
   shadowIntensity?: number;
   cornerRadiusOverride?: number;
-  iconWidth: number;
   defaults: Pick<OdooVersionConfig, "gradientAlpha" | "innerShadowAlpha" | "cornerRadiusPercent">;
   onChange: (updates: {
     gradientIntensity?: number;
@@ -23,7 +23,6 @@ export function AdvancedControls({
   gradientIntensity,
   shadowIntensity,
   cornerRadiusOverride,
-  iconWidth,
   defaults,
   onChange,
 }: AdvancedControlsProps) {
@@ -31,8 +30,8 @@ export function AdvancedControls({
 
   const effectiveGradient = gradientIntensity ?? defaults.gradientAlpha;
   const effectiveShadow = shadowIntensity ?? defaults.innerShadowAlpha;
-  const effectiveRadius = cornerRadiusOverride ?? Math.round(iconWidth * defaults.cornerRadiusPercent);
-  const maxRadius = Math.round(iconWidth * 0.2);
+  const effectiveRadius = cornerRadiusOverride ?? Math.round(ICON_SIZE * defaults.cornerRadiusPercent);
+  const maxRadius = Math.round(ICON_SIZE * 0.5);
 
   return (
     <div className="space-y-2">

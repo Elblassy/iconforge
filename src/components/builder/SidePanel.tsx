@@ -73,10 +73,8 @@ export function SidePanel({ config, onUpdate }: SidePanelProps) {
 
       {/* Size controls */}
       <SizeControls
-        iconWidth={config.iconWidth}
         fontSize={config.fontSize}
         fontWeight={config.fontWeight}
-        onIconWidthChange={(iconWidth) => onUpdate({ iconWidth })}
         onFontSizeChange={(fontSize) => onUpdate({ fontSize })}
         onFontWeightChange={(fontWeight) => onUpdate({ fontWeight })}
       />
@@ -88,7 +86,6 @@ export function SidePanel({ config, onUpdate }: SidePanelProps) {
         gradientIntensity={config.gradientIntensity}
         shadowIntensity={config.shadowIntensity}
         cornerRadiusOverride={config.cornerRadiusOverride}
-        iconWidth={config.iconWidth}
         defaults={{
           gradientAlpha: versionDefaults.gradientAlpha,
           innerShadowAlpha: versionDefaults.innerShadowAlpha,

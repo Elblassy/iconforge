@@ -11,48 +11,35 @@ import {
 } from "@/components/ui/select";
 
 interface SizeControlsProps {
-  iconWidth: number;
   fontSize: number;
   fontWeight: 300 | 400 | 700 | 900;
-  onIconWidthChange: (value: number) => void;
   onFontSizeChange: (value: number) => void;
   onFontWeightChange: (value: 300 | 400 | 700 | 900) => void;
 }
 
 export function SizeControls({
-  iconWidth,
   fontSize,
   fontWeight,
-  onIconWidthChange,
   onFontSizeChange,
   onFontWeightChange,
 }: SizeControlsProps) {
   return (
     <div className="space-y-4">
-      {/* Icon Width */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Icon Width</Label>
-          <span className="text-sm text-muted-foreground">{iconWidth}px</span>
-        </div>
-        <Slider
-          min={64}
-          max={1024}
-          step={1}
-          value={[iconWidth]}
-          onValueChange={([v]) => onIconWidthChange(v)}
-        />
+      {/* Fixed output size info */}
+      <div className="flex items-center justify-between">
+        <Label>Output Size</Label>
+        <span className="text-sm text-muted-foreground">128 x 128 px</span>
       </div>
 
       {/* Font Size */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label>Font Size</Label>
+          <Label>Icon Size</Label>
           <span className="text-sm text-muted-foreground">{fontSize}px</span>
         </div>
         <Slider
           min={16}
-          max={800}
+          max={120}
           step={1}
           value={[fontSize]}
           onValueChange={([v]) => onFontSizeChange(v)}
