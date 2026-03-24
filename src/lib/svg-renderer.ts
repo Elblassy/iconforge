@@ -1,75 +1,114 @@
 import type { IconConfig } from "@/types/icon-config";
 import { IconRenderer } from "./icon-renderer";
-import opentype from "opentype.js";
-
-// Cache loaded fonts to avoid re-fetching
-const fontCache = new Map<string, opentype.Font>();
-
-/** Font file URLs — opentype.js supports .otf, .ttf, .woff (NOT .woff2) */
-const FONT_URLS: Record<string, string> = {
-  "bootstrap-icons":
-    "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/bootstrap-icons.woff",
-  remixicon:
-    "https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.woff",
-  "tabler-icons":
-    "https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/fonts/tabler-icons.ttf",
-  "Font Awesome 6 Free":
-    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-solid-900.ttf",
-};
 
 /**
- * Load a font file and parse it with opentype.js.
+ * Maps icon set + icon class to the CDN URL for the individual SVG file.
  */
-async function loadFont(fontFamily: string): Promise<opentype.Font | null> {
-  if (fontCache.has(fontFamily)) return fontCache.get(fontFamily)!;
+function getIconSvgUrl(iconSet: string, iconClass: string): string | null {
+  // Extract the icon name from the class
+  // "bi bi-box" → "box", "fa-solid fa-house" → "house", "ri-home-line" → "home-line"
+  const parts = iconClass.split(" ");
 
-  const url = FONT_URLS[fontFamily];
-  if (!url) return null;
+  if (iconSet === "bootstrap-icons") {
+    // "bi bi-box-seam" → "box-seam"
+    const name = parts.find((p) => p.startsWith("bi-"))?.replace("bi-", "");
+    if (name) return `https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/${name}.svg`;
+  }
 
+  if (iconSet === "Font Awesome 6 Free") {
+    // "fa-solid fa-house" → style="solid", name="house"
+    const stylePart = parts.find((p) =>
+      ["fa-solid", "fa-regular", "fa-brands"].includes(p)
+    );
+    const namePart = parts.find(
+      (p) => p.startsWith("fa-") && !["fa-solid", "fa-regular", "fa-brands"].includes(p)
+    );
+    const style = stylePart?.replace("fa-", "") || "solid";
+    const name = namePart?.replace("fa-", "");
+    if (name) return `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/svgs/${style}/${name}.svg`;
+  }
+
+  if (iconSet === "remixicon") {
+    // "ri-home-line" → "home-line"
+    const name = parts[0]?.replace("ri-", "");
+    if (name) return `https://cdn.jsdelivr.net/npm/remixicon@4.1.0/icons/System/${name}.svg`;
+    // Remix organizes by category but we can try a direct approach
+  }
+
+  if (iconSet === "tabler-icons") {
+    // "ti ti-home" → "home"
+    const name = parts.find((p) => p.startsWith("ti-") && p !== "ti")?.replace("ti-", "");
+    if (name) return `https://cdn.jsdelivr.net/npm/@tabler/icons@latest/icons/outline/${name}.svg`;
+  }
+
+  return null;
+}
+
+/**
+ * Fetch an SVG from URL, extract the path/shape elements, and recolor them.
+ */
+async function fetchAndRecolorSvg(
+  url: string,
+  fillColor: string
+): Promise<string | null> {
   try {
     const response = await fetch(url);
-    if (!response.ok) {
-      console.warn(`Font fetch failed for ${fontFamily}: ${response.status} ${response.statusText}`);
-      return null;
+    if (!response.ok) return null;
+    let svgText = await response.text();
+
+    // Parse the SVG to extract content
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgText, "image/svg+xml");
+    const svgEl = doc.querySelector("svg");
+    if (!svgEl) return null;
+
+    // Get the original viewBox or derive from width/height
+    let viewBox = svgEl.getAttribute("viewBox");
+    if (!viewBox) {
+      const w = svgEl.getAttribute("width") || "50";
+      const h = svgEl.getAttribute("height") || "50";
+      viewBox = `0 0 ${w} ${h}`;
     }
-    const buffer = await response.arrayBuffer();
-    const font = opentype.parse(buffer);
-    fontCache.set(fontFamily, font);
-    return font;
+
+    // Recolor all paths, circles, rects, polygons to the user's chosen color
+    const shapes = svgEl.querySelectorAll("path, circle, rect, polygon, polyline, line, ellipse");
+    shapes.forEach((shape) => {
+      const currentFill = shape.getAttribute("fill");
+      // Don't override "none" fills (strokes only) or "currentColor"
+      if (currentFill !== "none") {
+        shape.setAttribute("fill", fillColor);
+      }
+      // Also recolor strokes if present
+      const currentStroke = shape.getAttribute("stroke");
+      if (currentStroke && currentStroke !== "none") {
+        shape.setAttribute("stroke", fillColor);
+      }
+    });
+
+    // Also set fill on the root SVG for icons that inherit color
+    svgEl.setAttribute("fill", fillColor);
+
+    // Build clean output SVG with 50x50 display size
+    svgEl.setAttribute("width", "50");
+    svgEl.setAttribute("height", "50");
+
+    // Remove comments and unnecessary attributes
+    const serializer = new XMLSerializer();
+    let output = serializer.serializeToString(svgEl);
+
+    // Clean up XML declaration if present
+    output = output.replace(/<\?xml[^?]*\?>\s*/g, "");
+
+    return output;
   } catch (err) {
-    console.warn(`Failed to parse font ${fontFamily}:`, err);
+    console.warn("Failed to fetch/recolor SVG:", err);
     return null;
   }
 }
 
 /**
- * Get SVG path data for a unicode character from a font.
- */
-function getGlyphPath(
-  font: opentype.Font,
-  char: string,
-  size: number
-): { pathData: string; width: number; height: number } | null {
-  const glyph = font.charToGlyph(char);
-  if (!glyph || glyph.index === 0) return null;
-
-  const unitsPerEm = font.unitsPerEm;
-  const scale = size / unitsPerEm;
-
-  const path = glyph.getPath(0, 0, size);
-  const pathData = path.toPathData(2);
-
-  const bbox = path.getBoundingBox();
-  return {
-    pathData,
-    width: (bbox.x2 - bbox.x1),
-    height: (bbox.y2 - bbox.y1),
-  };
-}
-
-/**
- * Render the icon via canvas, then wrap the result as a base64 image
- * inside an SVG. This makes the SVG fully self-contained.
+ * Render the icon via canvas, then wrap as a base64 image in SVG.
+ * Used for "SVG (with bg)" export — full icon with background.
  */
 export function renderSvg(config: IconConfig, canvasDataUrl?: string): string {
   const size = 512;
@@ -93,95 +132,34 @@ export function renderSvg(config: IconConfig, canvasDataUrl?: string): string {
 }
 
 /**
- * Render the icon as Odoo 17+ style SVG with real vector <path> elements.
- * No background, no gradient — just the icon shape on transparent canvas.
- * 50x50 viewBox matching Odoo's format.
+ * Render the icon as Odoo 17+ style SVG: fetch the actual SVG from CDN,
+ * recolor it, and output as a clean vector SVG. No background, no gradient.
  */
 export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
-  const svgSize = 50;
   const source = config.source;
 
   if (source.type === "text") {
-    // For text mode, use SVG <text> element (system fonts are available)
+    // Text mode: output SVG <text>
+    const fontSize = Math.round(50 * (config.fontSize / config.iconWidth));
     return [
-      `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}" xmlns="http://www.w3.org/2000/svg">`,
-      `  <text x="${svgSize / 2}" y="${svgSize / 2}" text-anchor="middle" dominant-baseline="central" font-family="${escapeXml(source.fontFamily)}" font-size="${Math.round(svgSize * (config.fontSize / config.iconWidth))}" font-weight="${config.fontWeight}" fill="${escapeXml(config.iconColor)}">${escapeXml(source.text)}</text>`,
+      `<svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">`,
+      `  <text x="25" y="25" text-anchor="middle" dominant-baseline="central" font-family="${escapeXml(source.fontFamily)}" font-size="${fontSize}" font-weight="${config.fontWeight}" fill="${escapeXml(config.iconColor)}">${escapeXml(source.text)}</text>`,
       `</svg>`,
     ].join("\n");
   }
 
   if (source.type === "icon") {
-    // Try to extract real SVG path from the font file
-    const char = source.unicodeChar;
-    if (char) {
-      const font = await loadFont(source.iconSet);
-      if (font) {
-        const glyphInfo = getGlyphPath(font, char, svgSize);
-        if (glyphInfo && glyphInfo.pathData) {
-          // Center the glyph in the 50x50 viewBox
-          const path = font.charToGlyph(char).getPath(0, 0, svgSize * 0.8);
-          const bbox = path.getBoundingBox();
-          const glyphW = bbox.x2 - bbox.x1;
-          const glyphH = bbox.y2 - bbox.y1;
-          const offsetX = (svgSize - glyphW) / 2 - bbox.x1;
-          const offsetY = (svgSize - glyphH) / 2 - bbox.y1;
-
-          const centeredPath = font
-            .charToGlyph(char)
-            .getPath(offsetX, offsetY, svgSize * 0.8);
-          const centeredPathData = centeredPath.toPathData(2);
-
-          return [
-            `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}" xmlns="http://www.w3.org/2000/svg">`,
-            `  <path d="${centeredPathData}" fill="${escapeXml(config.iconColor)}"/>`,
-            `</svg>`,
-          ].join("\n");
-        }
-      }
-    }
-
-    // Fallback: resolve unicode from DOM and try again
-    if (!char && typeof document !== "undefined") {
-      const el = document.createElement("i");
-      el.className = source.iconClass;
-      el.style.cssText =
-        "position:absolute;top:-9999px;visibility:hidden";
-      document.body.appendChild(el);
-      const content = window
-        .getComputedStyle(el, "::before")
-        .getPropertyValue("content");
-      document.body.removeChild(el);
-      const resolved = content?.replace(/^["']|["']$/g, "");
-      if (resolved && resolved !== "none") {
-        const font = await loadFont(source.iconSet);
-        if (font) {
-          const path = font.charToGlyph(resolved).getPath(0, 0, svgSize * 0.8);
-          const bbox = path.getBoundingBox();
-          const glyphW = bbox.x2 - bbox.x1;
-          const glyphH = bbox.y2 - bbox.y1;
-          const offsetX = (svgSize - glyphW) / 2 - bbox.x1;
-          const offsetY = (svgSize - glyphH) / 2 - bbox.y1;
-          const centeredPath = font
-            .charToGlyph(resolved)
-            .getPath(offsetX, offsetY, svgSize * 0.8);
-          const centeredPathData = centeredPath.toPathData(2);
-
-          if (centeredPathData) {
-            return [
-              `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}" xmlns="http://www.w3.org/2000/svg">`,
-              `  <path d="${centeredPathData}" fill="${escapeXml(config.iconColor)}"/>`,
-              `</svg>`,
-            ].join("\n");
-          }
-        }
-      }
+    const svgUrl = getIconSvgUrl(source.iconSet, source.iconClass);
+    if (svgUrl) {
+      const svg = await fetchAndRecolorSvg(svgUrl, config.iconColor);
+      if (svg) return svg;
     }
   }
 
-  // Ultimate fallback: empty SVG with a colored circle placeholder
+  // Fallback: colored circle
   return [
-    `<svg width="${svgSize}" height="${svgSize}" viewBox="0 0 ${svgSize} ${svgSize}" xmlns="http://www.w3.org/2000/svg">`,
-    `  <circle cx="${svgSize / 2}" cy="${svgSize / 2}" r="${svgSize * 0.35}" fill="${escapeXml(config.iconColor)}"/>`,
+    `<svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">`,
+    `  <circle cx="25" cy="25" r="17.5" fill="${escapeXml(config.iconColor)}"/>`,
     `</svg>`,
   ].join("\n");
 }
@@ -195,7 +173,7 @@ function escapeXml(str: string): string {
 }
 
 /**
- * Trigger a download of the SVG string as a file (with background).
+ * Download SVG with background (canvas-based).
  */
 export function downloadSvg(
   config: IconConfig,
@@ -213,7 +191,7 @@ export function downloadSvg(
 }
 
 /**
- * Download as Odoo 17+ format: real SVG paths, transparent bg, 50x50.
+ * Download as Odoo 17+ format: real SVG paths from CDN, recolored, no bg.
  */
 export async function downloadOdoo17Svg(
   config: IconConfig,
