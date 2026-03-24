@@ -8,8 +8,9 @@ import { AdvancedControls } from "./AdvancedControls";
 import { IconSourceTabs } from "./IconSourceTabs";
 import { PresetTemplates } from "./PresetTemplates";
 import { LogoOverlay } from "./LogoOverlay";
+import { MultiColorControls } from "./MultiColorControls";
 import { getVersionConfig } from "@/lib/odoo-versions";
-import type { IconConfig } from "@/types/icon-config";
+import type { IconConfig, MultiColorMode } from "@/types/icon-config";
 
 interface SidePanelProps {
   config: IconConfig;
@@ -61,7 +62,45 @@ export function SidePanel({ config, onUpdate }: SidePanelProps) {
 
       <Separator />
 
-      {/* Color controls */}
+      {/* Multi-color controls (for Odoo 17+ SVG) */}
+      <MultiColorControls
+        mode={config.multiColor?.mode ?? "single"}
+        iconColor={config.iconColor}
+        color2={config.multiColor?.color2 ?? "#F86126"}
+        color3={config.multiColor?.color3 ?? "#FBB945"}
+        onModeChange={(mode: MultiColorMode) =>
+          onUpdate({
+            multiColor: {
+              mode,
+              color2: config.multiColor?.color2 ?? "#F86126",
+              color3: config.multiColor?.color3 ?? "#FBB945",
+            },
+          })
+        }
+        onIconColorChange={(color) => onUpdate({ iconColor: color })}
+        onColor2Change={(color2) =>
+          onUpdate({
+            multiColor: {
+              mode: config.multiColor?.mode ?? "duo",
+              color2,
+              color3: config.multiColor?.color3 ?? "#FBB945",
+            },
+          })
+        }
+        onColor3Change={(color3) =>
+          onUpdate({
+            multiColor: {
+              mode: config.multiColor?.mode ?? "trio",
+              color2: config.multiColor?.color2 ?? "#F86126",
+              color3,
+            },
+          })
+        }
+      />
+
+      <Separator />
+
+      {/* Background color (for PNG export) */}
       <ColorSection
         backgroundColor={config.backgroundColor}
         iconColor={config.iconColor}

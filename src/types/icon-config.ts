@@ -23,6 +23,8 @@ export type IconSource =
       imageDataUrl: string;
     };
 
+export type MultiColorMode = "single" | "duo" | "trio";
+
 export interface IconConfig {
   odooVersion: OdooVersion;
   source: IconSource;
@@ -35,6 +37,12 @@ export interface IconConfig {
   shadowIntensity?: number;
   cornerRadiusOverride?: number;
   logoOverlay?: LogoOverlay;
+  /** Multi-color mode for Odoo 17+ style icons */
+  multiColor?: {
+    mode: MultiColorMode;
+    color2: string;
+    color3: string;
+  };
 }
 
 export interface SavedIcon {
