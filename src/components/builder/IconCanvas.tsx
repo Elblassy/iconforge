@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import type { IconConfig } from "@/types/icon-config";
 import { useIconRenderer } from "@/hooks/useIconRenderer";
 import { Button } from "@/components/ui/button";
-import { downloadSvg } from "@/lib/svg-renderer";
+import { downloadSvg, downloadOdoo17Svg } from "@/lib/svg-renderer";
 import { BatchExport } from "./BatchExport";
 import { saveIcon } from "@/lib/storage";
 
@@ -15,6 +15,7 @@ export function IconCanvas({ config }: IconCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useIconRenderer(config, containerRef);
   const [zoom, setZoom] = useState<50 | 100 | 200>(100);
+  const [showOdoo17Info, setShowOdoo17Info] = useState(false);
 
   const handleDownloadPng = () => {
     const canvas = containerRef.current?.querySelector("canvas");
@@ -90,29 +91,60 @@ export function IconCanvas({ config }: IconCanvasProps) {
       </div>
 
       {/* Action bar */}
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <Button variant="default" size="sm" aria-label="Download PNG" onClick={handleDownloadPng}>
-          Download PNG
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          aria-label="Download SVG"
-          onClick={() => {
-            const canvas = containerRef.current?.querySelector("canvas");
-            const dataUrl = canvas?.toDataURL("image/png");
-            downloadSvg(config, "odoo-icon.svg", dataUrl);
-          }}
-        >
-          Download SVG
-        </Button>
-        <Button variant="outline" size="sm" aria-label="Copy to Clipboard" onClick={handleCopyToClipboard}>
-          Copy to Clipboard
-        </Button>
-        <BatchExport config={config} />
-        <Button variant="outline" size="sm" aria-label="Save Locally" onClick={handleSaveLocally}>
-          Save Locally
-        </Button>
+      <div className="flex flex-col items-center gap-3 w-full max-w-lg">
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Button variant="default" size="sm" aria-label="Download PNG" onClick={handleDownloadPng}>
+            PNG (Odoo 16)
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label="Download SVG"
+            onClick={() => {
+              const canvas = containerRef.current?.querySelector("canvas");
+              const dataUrl = canvas?.toDataURL("image/png");
+              downloadSvg(config, "odoo-icon.svg", dataUrl);
+            }}
+          >
+            SVG (with bg)
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label="Download Odoo 17+ SVG"
+            onClick={() => {
+              setShowOdoo17Info(true);
+              downloadOdoo17Svg(config);
+            }}
+          >
+            SVG (Odoo 17+)
+          </Button>
+          <Button variant="outline" size="sm" aria-label="Copy to Clipboard" onClick={handleCopyToClipboard}>
+            Copy
+          </Button>
+          <BatchExport config={config} />
+          <Button variant="outline" size="sm" aria-label="Save Locally" onClick={handleSaveLocally}>
+            Save
+          </Button>
+        </div>
+
+        {showOdoo17Info && (
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-xs text-muted-foreground w-full">
+            <p className="font-medium text-primary mb-1">Odoo 17+ SVG Format</p>
+            <p>
+              This exports the icon without background on a transparent 50x50 canvas,
+              matching how Odoo 17+ handles module icons. Odoo&apos;s web client applies
+              the background color automatically and adapts it for dark/light theme.
+              Place the file at <code className="text-foreground">static/description/icon.svg</code> in your module.
+            </p>
+            <button
+              className="mt-1.5 text-primary hover:underline"
+              onClick={() => setShowOdoo17Info(false)}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
