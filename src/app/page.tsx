@@ -35,7 +35,7 @@ export default function BuilderPage() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)]">
+    <div className="flex h-[calc(100vh-3.5rem-2.5rem)]">
       {/* Desktop sidebar — hidden on mobile */}
       <aside className="hidden md:block w-80 shrink-0 overflow-y-auto border-r border-border bg-card p-4">
         {sidePanelContent}
