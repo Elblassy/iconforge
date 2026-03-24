@@ -20,21 +20,10 @@ describe("renderSvg()", () => {
     expect(svg).toContain("</svg>");
   });
 
-  it("has correct width=\"512\" and height=\"512\" attributes", () => {
+  it("has correct width and height attributes", () => {
     const svg = renderSvg(TEXT_CONFIG);
     expect(svg).toContain('width="512"');
     expect(svg).toContain('height="512"');
-  });
-
-  it("includes background color when set to #FF0000", () => {
-    const config: IconConfig = { ...TEXT_CONFIG, backgroundColor: "#FF0000" };
-    const svg = renderSvg(config);
-    expect(svg).toContain("#FF0000");
-  });
-
-  it("includes text content CRM", () => {
-    const svg = renderSvg(TEXT_CONFIG);
-    expect(svg).toContain("CRM");
   });
 
   it("includes xmlns attribute", () => {
@@ -42,40 +31,16 @@ describe("renderSvg()", () => {
     expect(svg).toContain('xmlns="http://www.w3.org/2000/svg"');
   });
 
-  it("includes viewBox attribute", () => {
+  it("embeds a base64 image", () => {
     const svg = renderSvg(TEXT_CONFIG);
-    expect(svg).toContain("viewBox=");
+    expect(svg).toContain("<image");
+    expect(svg).toContain("data:image/png;base64,");
   });
 
-  it("includes a clipPath element for rounded corners", () => {
-    const svg = renderSvg(TEXT_CONFIG);
-    expect(svg).toContain("<clipPath");
-  });
-
-  it("includes a linearGradient element", () => {
-    const svg = renderSvg(TEXT_CONFIG);
-    expect(svg).toContain("<linearGradient");
-  });
-
-  it("includes a drop shadow filter", () => {
-    const svg = renderSvg(TEXT_CONFIG);
-    expect(svg).toContain("<filter");
-    expect(svg).toContain("feDropShadow");
-  });
-
-  it("includes the icon color for text fill", () => {
-    const svg = renderSvg(TEXT_CONFIG);
-    expect(svg).toContain("#ffffff");
-  });
-
-  it("escapes XML entities in text content", () => {
-    const config: IconConfig = {
-      ...TEXT_CONFIG,
-      source: { type: "text", text: "<B&W>", fontFamily: "Arial" },
-    };
-    const svg = renderSvg(config);
-    expect(svg).not.toContain("<B&W>");
-    expect(svg).toContain("&lt;B&amp;W&gt;");
+  it("uses a provided canvasDataUrl when given", () => {
+    const fakeDataUrl = "data:image/png;base64,FAKECONTENT";
+    const svg = renderSvg(TEXT_CONFIG, fakeDataUrl);
+    expect(svg).toContain("FAKECONTENT");
   });
 
   it("renders without throwing for all Odoo versions", () => {
@@ -108,11 +73,5 @@ describe("renderSvg()", () => {
       },
     };
     expect(() => renderSvg(config)).not.toThrow();
-  });
-
-  it("respects cornerRadiusOverride", () => {
-    const config: IconConfig = { ...TEXT_CONFIG, cornerRadiusOverride: 100 };
-    const svg = renderSvg(config);
-    expect(svg).toContain("100.00");
   });
 });

@@ -98,7 +98,11 @@ export function IconCanvas({ config }: IconCanvasProps) {
           variant="outline"
           size="sm"
           aria-label="Download SVG"
-          onClick={() => downloadSvg(config)}
+          onClick={() => {
+            const canvas = containerRef.current?.querySelector("canvas");
+            const dataUrl = canvas?.toDataURL("image/png");
+            downloadSvg(config, "odoo-icon.svg", dataUrl);
+          }}
         >
           Download SVG
         </Button>
