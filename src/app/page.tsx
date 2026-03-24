@@ -6,6 +6,7 @@ import { ExportPanel } from "@/components/builder/ExportPanel";
 import { MobileSheet } from "@/components/layout/MobileSheet";
 import { useIconConfig } from "@/hooks/useIconConfig";
 import { decodeConfig } from "@/lib/share";
+import { ICON_SIZE } from "@/types/icon-config";
 
 export default function BuilderPage() {
   const { config, updateConfig, setConfig } = useIconConfig();
@@ -18,6 +19,12 @@ export default function BuilderPage() {
     if (encoded) {
       const decoded = decodeConfig(encoded);
       if (decoded) {
+        // Normalize iconWidth to current standard and scale fontSize proportionally
+        if (decoded.iconWidth !== ICON_SIZE) {
+          const scale = ICON_SIZE / decoded.iconWidth;
+          decoded.fontSize = Math.round(decoded.fontSize * scale);
+          decoded.iconWidth = ICON_SIZE;
+        }
         setConfig(decoded);
       }
     }

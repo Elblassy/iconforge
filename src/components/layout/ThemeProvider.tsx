@@ -4,18 +4,15 @@ import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import type { ThemeProviderProps } from "next-themes";
 
+// next-themes injects a <script> for theme detection, which triggers a
+// React 19 console warning. This is harmless — the script runs before
+// hydration to prevent FOUC. Wrapping in Suspense suppresses the warning.
+// See: https://github.com/pacocoursey/next-themes/issues/358
+
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Render children immediately but only wrap with theme provider after mount
-  // This avoids the script injection warning from React 19
-  if (!mounted) {
-    return <>{children}</>;
-  }
-
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+  return (
+    <React.Suspense fallback={<>{children}</>}>
+      <NextThemesProvider {...props}>{children}</NextThemesProvider>
+    </React.Suspense>
+  );
 }

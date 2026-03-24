@@ -177,9 +177,10 @@ export class IconRenderer {
       ctx.fillText(source.text, x, y);
     } else if (source.type === "icon") {
       ctx.font = `${fontWeight} ${fontSize}px "${source.iconSet}"`;
-      const glyph =
-        source.unicodeChar !== undefined ? source.unicodeChar : source.iconClass;
-      ctx.fillText(glyph, x, y);
+      const glyph = source.unicodeChar || this._resolveIconUnicode(source.iconClass);
+      if (glyph) {
+        ctx.fillText(glyph, x, y);
+      }
     }
 
     ctx.restore();
@@ -286,6 +287,24 @@ export class IconRenderer {
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
+
+  /**
+   * Resolve a CSS icon class to its unicode character via the DOM.
+   * Creates a temporary element, reads the ::before content.
+   */
+  private _resolveIconUnicode(iconClass: string): string | null {
+    if (typeof document === "undefined") return null;
+    const el = document.createElement("i");
+    el.className = iconClass;
+    el.style.cssText = "position:absolute;top:-9999px;left:-9999px;visibility:hidden";
+    document.body.appendChild(el);
+    const content = window.getComputedStyle(el, "::before").getPropertyValue("content");
+    document.body.removeChild(el);
+    if (content && content !== "none" && content !== '""' && content !== "''") {
+      return content.replace(/^["']|["']$/g, "");
+    }
+    return null;
+  }
 
   /**
    * Build a rounded-rectangle path.
