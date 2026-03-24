@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 import type { IconConfig } from "@/types/icon-config";
 import { IconRenderer } from "@/lib/icon-renderer";
 import { loadGoogleFont } from "@/lib/fonts";
+import { loadIconSetCSS, getIconSets } from "@/lib/icon-sets";
 
 const SYSTEM_FONTS = ["Arial", "Georgia", "Verdana", "Courier New", "Times New Roman"];
 
@@ -26,6 +27,16 @@ export function useIconRenderer(
           !SYSTEM_FONTS.includes(config.source.fontFamily)
         ) {
           await loadGoogleFont(config.source.fontFamily);
+        }
+
+        // Load icon set font if needed
+        if (config.source.type === "icon") {
+          const iconSource = config.source;
+          const sets = getIconSets();
+          const matchingSet = sets.find(s => s.fontFamily === iconSource.iconSet);
+          if (matchingSet) {
+            await loadIconSetCSS(matchingSet.id);
+          }
         }
 
         if (cancelled) return;
@@ -53,6 +64,24 @@ export function useIconRenderer(
           });
         } else {
           canvas = rendererRef.current.render(config);
+        }
+
+        if (cancelled) return;
+
+        // Draw logo overlay if present
+        if (config.logoOverlay?.imageDataUrl) {
+          await new Promise<void>((resolve) => {
+            const logoImg = new Image();
+            logoImg.onload = () => {
+              const ctx = canvas.getContext("2d");
+              if (ctx) {
+                rendererRef.current.drawLogoOverlay(ctx, config, config.iconWidth, logoImg);
+              }
+              resolve();
+            };
+            logoImg.onerror = () => resolve();
+            logoImg.src = config.logoOverlay!.imageDataUrl;
+          });
         }
 
         if (cancelled) return;

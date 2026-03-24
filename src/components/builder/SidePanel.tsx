@@ -7,6 +7,7 @@ import { SizeControls } from "./SizeControls";
 import { AdvancedControls } from "./AdvancedControls";
 import { IconSourceTabs } from "./IconSourceTabs";
 import { PresetTemplates } from "./PresetTemplates";
+import { LogoOverlay } from "./LogoOverlay";
 import { getVersionConfig } from "@/lib/odoo-versions";
 import type { IconConfig } from "@/types/icon-config";
 
@@ -48,6 +49,14 @@ export function SidePanel({ config, onUpdate }: SidePanelProps) {
       <IconSourceTabs
         source={config.source}
         onSourceChange={(source) => onUpdate({ source })}
+      />
+
+      <Separator />
+
+      {/* Company logo overlay */}
+      <LogoOverlay
+        overlay={config.logoOverlay}
+        onChange={(logoOverlay) => onUpdate({ logoOverlay })}
       />
 
       <Separator />

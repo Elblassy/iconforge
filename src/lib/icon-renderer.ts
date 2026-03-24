@@ -1,4 +1,4 @@
-import type { IconConfig, OdooVersionConfig } from "@/types/icon-config";
+import type { IconConfig, LogoOverlay, OdooVersionConfig } from "@/types/icon-config";
 import { getVersionConfig } from "./odoo-versions";
 import { shadeColor, hexToRgba } from "./color-utils";
 
@@ -42,6 +42,71 @@ export class IconRenderer {
     this.drawGradient(ctx, size, versionConfig.gradientAlpha);
 
     return canvas;
+  }
+
+  /**
+   * Draw a company logo overlay image onto the canvas.
+   * A subtle white rounded-rect background is drawn behind the logo for visibility.
+   */
+  drawLogoOverlay(
+    ctx: CanvasRenderingContext2D,
+    config: IconConfig,
+    size: number,
+    logoImage: HTMLImageElement
+  ): void {
+    const overlay = config.logoOverlay;
+    if (!overlay) return;
+
+    const logoSize = size * (overlay.size / 100);
+    const padding = size * 0.05;
+    const bgPadding = logoSize * 0.12;
+    const bgSize = logoSize + bgPadding * 2;
+    const bgRadius = bgSize * 0.2;
+
+    let x: number;
+    let y: number;
+
+    switch (overlay.position) {
+      case "top-left":
+        x = padding;
+        y = padding;
+        break;
+      case "top-right":
+        x = size - padding - logoSize;
+        y = padding;
+        break;
+      case "bottom-left":
+        x = padding;
+        y = size - padding - logoSize;
+        break;
+      case "bottom-right":
+        x = size - padding - logoSize;
+        y = size - padding - logoSize;
+        break;
+      case "center":
+        x = (size - logoSize) / 2;
+        y = (size - logoSize) / 2;
+        break;
+      default:
+        x = padding;
+        y = padding;
+    }
+
+    const bgX = x - bgPadding;
+    const bgY = y - bgPadding;
+
+    // Draw white rounded-rect background
+    ctx.save();
+    ctx.globalAlpha = 0.92;
+    ctx.fillStyle = "#ffffff";
+    this._roundedRectPath(ctx, bgX, bgY, bgSize, bgSize, bgRadius);
+    ctx.fill();
+    ctx.restore();
+
+    // Draw logo image
+    ctx.save();
+    ctx.drawImage(logoImage, x, y, logoSize, logoSize);
+    ctx.restore();
   }
 
   /**

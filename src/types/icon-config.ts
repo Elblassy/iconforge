@@ -1,5 +1,11 @@
 export type OdooVersion = "16.0" | "17.0" | "18.0" | "19.0";
 
+export interface LogoOverlay {
+  imageDataUrl: string;
+  position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center";
+  size: number; // percentage of icon width, 10-50, default 25
+}
+
 export type IconSource =
   | {
       type: "icon";
@@ -28,6 +34,7 @@ export interface IconConfig {
   gradientIntensity?: number;
   shadowIntensity?: number;
   cornerRadiusOverride?: number;
+  logoOverlay?: LogoOverlay;
 }
 
 export interface SavedIcon {

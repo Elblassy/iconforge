@@ -6,6 +6,9 @@ export function encodeConfig(config: IconConfig): string {
   if (stripped.source.type === "image") {
     stripped.source = { ...stripped.source, imageDataUrl: "" };
   }
+  if (stripped.logoOverlay?.imageDataUrl) {
+    stripped.logoOverlay = { ...stripped.logoOverlay, imageDataUrl: "" };
+  }
   const json = JSON.stringify(stripped);
   const compressed = pako.deflate(json);
   const base64 = btoa(String.fromCharCode(...compressed));
