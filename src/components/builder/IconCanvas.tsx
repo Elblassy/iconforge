@@ -16,6 +16,7 @@ export function IconCanvas({ config }: IconCanvasProps) {
   const canvasRef = useIconRenderer(config, containerRef);
   const [zoom, setZoom] = useState<50 | 100 | 200>(100);
   const [showOdoo17Info, setShowOdoo17Info] = useState(false);
+  const [odoo17Loading, setOdoo17Loading] = useState(false);
 
   const handleDownloadPng = () => {
     const canvas = containerRef.current?.querySelector("canvas");
@@ -112,12 +113,18 @@ export function IconCanvas({ config }: IconCanvasProps) {
             variant="outline"
             size="sm"
             aria-label="Download Odoo 17+ SVG"
+            disabled={odoo17Loading}
             onClick={async () => {
-              setShowOdoo17Info(true);
-              await downloadOdoo17Svg(config);
+              setOdoo17Loading(true);
+              try {
+                await downloadOdoo17Svg(config);
+                setShowOdoo17Info(true);
+              } finally {
+                setOdoo17Loading(false);
+              }
             }}
           >
-            SVG (Odoo 17+)
+            {odoo17Loading ? "Loading..." : "SVG (Odoo 17+)"}
           </Button>
           <Button variant="outline" size="sm" aria-label="Copy to Clipboard" onClick={handleCopyToClipboard}>
             Copy

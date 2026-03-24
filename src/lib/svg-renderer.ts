@@ -2,17 +2,19 @@ import type { IconConfig } from "@/types/icon-config";
 import { IconRenderer } from "./icon-renderer";
 
 /**
- * Maps icon set + icon class to the CDN URL for the individual SVG file.
+ * Maps icon set + icon class to candidate CDN URLs for the individual SVG file.
+ * Returns multiple candidates to try in order (first success wins).
  */
-function getIconSvgUrl(iconSet: string, iconClass: string): string | null {
-  // Extract the icon name from the class
-  // "bi bi-box" → "box", "fa-solid fa-house" → "house", "ri-home-line" → "home-line"
+function getIconSvgUrls(iconSet: string, iconClass: string): string[] {
   const parts = iconClass.split(" ");
+  const urls: string[] = [];
 
   if (iconSet === "bootstrap-icons") {
     // "bi bi-box-seam" → "box-seam"
     const name = parts.find((p) => p.startsWith("bi-"))?.replace("bi-", "");
-    if (name) return `https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/${name}.svg`;
+    if (name) {
+      urls.push(`https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/${name}.svg`);
+    }
   }
 
   if (iconSet === "Font Awesome 6 Free") {
@@ -25,23 +27,37 @@ function getIconSvgUrl(iconSet: string, iconClass: string): string | null {
     );
     const style = stylePart?.replace("fa-", "") || "solid";
     const name = namePart?.replace("fa-", "");
-    if (name) return `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/svgs/${style}/${name}.svg`;
+    if (name) {
+      urls.push(`https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/svgs/${style}/${name}.svg`);
+    }
   }
 
   if (iconSet === "remixicon") {
-    // "ri-home-line" → "home-line"
+    // Remix organizes by category — try common categories
     const name = parts[0]?.replace("ri-", "");
-    if (name) return `https://cdn.jsdelivr.net/npm/remixicon@4.1.0/icons/System/${name}.svg`;
-    // Remix organizes by category but we can try a direct approach
+    if (name) {
+      const categories = [
+        "System", "Business", "Design", "Development", "Document",
+        "Editor", "Finance", "Health", "Logos", "Map", "Media",
+        "Communication", "User", "Weather", "Buildings", "Device",
+        "Arrows", "Others",
+      ];
+      for (const cat of categories) {
+        urls.push(`https://cdn.jsdelivr.net/npm/remixicon@4.1.0/icons/${cat}/${name}.svg`);
+      }
+    }
   }
 
   if (iconSet === "tabler-icons") {
     // "ti ti-home" → "home"
     const name = parts.find((p) => p.startsWith("ti-") && p !== "ti")?.replace("ti-", "");
-    if (name) return `https://cdn.jsdelivr.net/npm/@tabler/icons@latest/icons/outline/${name}.svg`;
+    if (name) {
+      urls.push(`https://cdn.jsdelivr.net/npm/@tabler/icons@latest/icons/outline/${name}.svg`);
+      urls.push(`https://cdn.jsdelivr.net/npm/@tabler/icons@latest/icons/filled/${name}.svg`);
+    }
   }
 
-  return null;
+  return urls;
 }
 
 /**
@@ -149,11 +165,12 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
   }
 
   if (source.type === "icon") {
-    const svgUrl = getIconSvgUrl(source.iconSet, source.iconClass);
-    if (svgUrl) {
-      const svg = await fetchAndRecolorSvg(svgUrl, config.iconColor);
+    const urls = getIconSvgUrls(source.iconSet, source.iconClass);
+    for (const url of urls) {
+      const svg = await fetchAndRecolorSvg(url, config.iconColor);
       if (svg) return svg;
     }
+    console.warn("Odoo 17+ SVG: no SVG found for", source.iconClass, "tried:", urls);
   }
 
   // Fallback: colored circle
