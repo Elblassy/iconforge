@@ -48,8 +48,17 @@ export function Header() {
           })}
         </nav>
 
-        {/* Right side: ThemeToggle */}
-        <div className="flex flex-1 items-center justify-end gap-2">
+        {/* Right side: Powered by + ThemeToggle */}
+        <div className="flex flex-1 items-center justify-end gap-3">
+          <a
+            href="https://elblasy.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs text-muted-foreground transition-colors hover:text-primary hover:border-primary"
+          >
+            Powered by
+            <span className="font-semibold text-foreground">elblasy.app</span>
+          </a>
           <ThemeToggle />
         </div>
       </div>
