@@ -20,30 +20,40 @@ export class IconRenderer {
         ? config.cornerRadiusOverride
         : size * versionConfig.cornerRadiusPercent;
 
+    const isTransparent = config.backgroundColor === "transparent";
+
     // Clip everything to the rounded rect so shadows/gradient respect corners
     this._roundedRectPath(ctx, 0, 0, size, size, cornerRadius);
     ctx.clip();
 
-    this.drawBackground(ctx, size, cornerRadius, config.backgroundColor);
+    // Draw background (skip if transparent)
+    if (!isTransparent) {
+      this.drawBackground(ctx, size, cornerRadius, config.backgroundColor);
+    }
 
-    if (versionConfig.hasHardShadow) {
-      const shadowColor = shadeColor(
-        config.backgroundColor,
-        versionConfig.hardShadowDarken
-      );
-      this.drawHardShadow(ctx, config, size, shadowColor);
+    // Shadows and effects only on solid backgrounds
+    if (!isTransparent) {
+      if (versionConfig.hasHardShadow) {
+        const shadowColor = shadeColor(
+          config.backgroundColor,
+          versionConfig.hardShadowDarken
+        );
+        this.drawHardShadow(ctx, config, size, shadowColor);
+      }
     }
 
     this.drawIconWithShadow(ctx, config, size, versionConfig);
 
-    this.drawInnerShadows(
-      ctx,
-      size,
-      cornerRadius,
-      versionConfig.innerShadowAlpha
-    );
+    if (!isTransparent) {
+      this.drawInnerShadows(
+        ctx,
+        size,
+        cornerRadius,
+        versionConfig.innerShadowAlpha
+      );
 
-    this.drawGradient(ctx, size, versionConfig.gradientAlpha);
+      this.drawGradient(ctx, size, versionConfig.gradientAlpha);
+    }
 
     return canvas;
   }

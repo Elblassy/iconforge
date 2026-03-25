@@ -3,6 +3,7 @@
  * Negative percent darkens; positive percent lightens.
  */
 export function shadeColor(hex: string, percent: number): string {
+  if (!hex || hex === "transparent") return "#000000";
   let num = parseInt(hex.replace("#", ""), 16);
   const amt = Math.round(2.55 * percent);
   const R = Math.min(255, Math.max(0, (num >> 16) + amt));

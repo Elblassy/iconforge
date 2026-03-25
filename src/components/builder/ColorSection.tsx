@@ -1,6 +1,7 @@
 "use client";
 
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { COLOR_PALETTES } from "@/lib/presets";
 
 interface ColorSectionProps {
@@ -16,23 +17,43 @@ export function ColorSection({
   onBackgroundChange,
   onIconColorChange,
 }: ColorSectionProps) {
+  const isTransparent = backgroundColor === "transparent";
+
   return (
     <div className="space-y-4">
-      {/* Background color picker */}
+      {/* Background color */}
       <div className="space-y-1.5">
-        <Label htmlFor="bg-color">Background Color</Label>
+        <Label>Background</Label>
         <div className="flex items-center gap-2">
-          <input
-            id="bg-color"
-            type="color"
-            value={backgroundColor}
-            onChange={(e) => onBackgroundChange(e.target.value)}
-            className="h-9 w-9 cursor-pointer rounded border border-input p-0.5"
-          />
-          <span className="font-mono text-sm text-muted-foreground">
-            {backgroundColor.toUpperCase()}
-          </span>
+          <Button
+            variant={isTransparent ? "default" : "outline"}
+            size="sm"
+            className="text-xs"
+            onClick={() =>
+              onBackgroundChange(isTransparent ? "#714BC2" : "transparent")
+            }
+          >
+            {isTransparent ? "Transparent" : "Solid"}
+          </Button>
+          {!isTransparent && (
+            <>
+              <input
+                type="color"
+                value={backgroundColor}
+                onChange={(e) => onBackgroundChange(e.target.value)}
+                className="h-8 w-8 cursor-pointer rounded border border-input p-0.5"
+              />
+              <span className="font-mono text-xs text-muted-foreground">
+                {backgroundColor.toUpperCase()}
+              </span>
+            </>
+          )}
         </div>
+        {isTransparent && (
+          <p className="text-xs text-muted-foreground">
+            Odoo 17+ handles the background. Icon exports with no background.
+          </p>
+        )}
       </div>
 
       {/* Icon color picker */}
@@ -44,9 +65,9 @@ export function ColorSection({
             type="color"
             value={iconColor}
             onChange={(e) => onIconColorChange(e.target.value)}
-            className="h-9 w-9 cursor-pointer rounded border border-input p-0.5"
+            className="h-8 w-8 cursor-pointer rounded border border-input p-0.5"
           />
-          <span className="font-mono text-sm text-muted-foreground">
+          <span className="font-mono text-xs text-muted-foreground">
             {iconColor.toUpperCase()}
           </span>
         </div>
@@ -55,9 +76,6 @@ export function ColorSection({
       {/* Color palettes */}
       <div className="space-y-3">
         <Label>Icon Color Palettes</Label>
-        <p className="text-xs text-muted-foreground">
-          Sets the icon/glyph color (used in Odoo 17+ SVG export)
-        </p>
         {COLOR_PALETTES.map((palette) => (
           <div key={palette.name} className="space-y-1.5">
             <p className="text-xs text-muted-foreground">{palette.name}</p>
@@ -67,14 +85,14 @@ export function ColorSection({
                   key={pair.bg}
                   type="button"
                   aria-label={`Apply ${palette.name} icon color ${pair.bg}`}
-                  onClick={() => {
-                    onIconColorChange(pair.bg);
-                  }}
+                  onClick={() => onIconColorChange(pair.bg)}
                   className="h-7 w-7 rounded-full border-2 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
                   style={{
                     backgroundColor: pair.bg,
                     borderColor:
-                      iconColor === pair.bg ? "hsl(var(--primary))" : "transparent",
+                      iconColor === pair.bg
+                        ? "hsl(var(--primary))"
+                        : "transparent",
                   }}
                 />
               ))}

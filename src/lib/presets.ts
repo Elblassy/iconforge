@@ -7,60 +7,57 @@ export interface ColorPalette {
 
 export const COLOR_PALETTES: ColorPalette[] = [
   {
-    name: "Odoo Official",
+    name: "Odoo 17+ Style",
     pairs: [
-      { bg: "#714BC2", fg: "#ffffff" },
-      { bg: "#017E84", fg: "#ffffff" },
-      { bg: "#F06050", fg: "#ffffff" },
-      { bg: "#2C8397", fg: "#ffffff" },
-      { bg: "#00A09D", fg: "#ffffff" },
-      { bg: "#875A7B", fg: "#ffffff" },
-      { bg: "#547F93", fg: "#ffffff" },
-      { bg: "#E9AB17", fg: "#ffffff" },
+      { bg: "#714BC2", fg: "#fff" }, // Purple (Sales, CRM)
+      { bg: "#E8536D", fg: "#fff" }, // Coral/Pink (Dashboards)
+      { bg: "#00A09D", fg: "#fff" }, // Teal (Inventory, Purchase)
+      { bg: "#F39C12", fg: "#fff" }, // Amber/Gold (Accounting)
+      { bg: "#2C8397", fg: "#fff" }, // Deep teal (Website)
+      { bg: "#21B799", fg: "#fff" }, // Mint green
+      { bg: "#3B5998", fg: "#fff" }, // Navy blue
+      { bg: "#D4526E", fg: "#fff" }, // Muted rose
+      { bg: "#2E4053", fg: "#fff" }, // Dark slate
+      { bg: "#8E44AD", fg: "#fff" }, // Rich purple
     ],
   },
   {
-    name: "Pastel",
+    name: "Odoo Multicolor",
     pairs: [
-      { bg: "#A8D8EA", fg: "#2C3E50" },
-      { bg: "#AA96DA", fg: "#ffffff" },
-      { bg: "#FCBAD3", fg: "#2C3E50" },
-      { bg: "#FFFFD2", fg: "#2C3E50" },
-      { bg: "#B5EAD7", fg: "#2C3E50" },
-      { bg: "#C7CEEA", fg: "#2C3E50" },
+      { bg: "#985184", fg: "#fff" }, // Muted purple
+      { bg: "#FBB945", fg: "#fff" }, // Warm gold
+      { bg: "#FC868B", fg: "#fff" }, // Soft coral
+      { bg: "#F86126", fg: "#fff" }, // Vivid orange
+      { bg: "#47C1A3", fg: "#fff" }, // Jade green
+      { bg: "#3E7CB1", fg: "#fff" }, // Steel blue
+      { bg: "#962B48", fg: "#fff" }, // Burgundy
+      { bg: "#1B998B", fg: "#fff" }, // Deep mint
     ],
   },
   {
-    name: "Vibrant",
-    pairs: [
-      { bg: "#FF6B6B", fg: "#ffffff" },
-      { bg: "#4ECDC4", fg: "#ffffff" },
-      { bg: "#45B7D1", fg: "#ffffff" },
-      { bg: "#96CEB4", fg: "#ffffff" },
-      { bg: "#FFEAA7", fg: "#2C3E50" },
-      { bg: "#DDA0DD", fg: "#ffffff" },
-    ],
-  },
-  {
-    name: "Monochrome",
+    name: "Professional",
     pairs: [
       { bg: "#2C3E50", fg: "#ECF0F1" },
       { bg: "#34495E", fg: "#ECF0F1" },
-      { bg: "#7F8C8D", fg: "#ffffff" },
-      { bg: "#95A5A6", fg: "#ffffff" },
-      { bg: "#BDC3C7", fg: "#2C3E50" },
-      { bg: "#1A1A2E", fg: "#ECF0F1" },
+      { bg: "#1A5276", fg: "#fff" },
+      { bg: "#7D3C98", fg: "#fff" },
+      { bg: "#C0392B", fg: "#fff" },
+      { bg: "#27AE60", fg: "#fff" },
+      { bg: "#2980B9", fg: "#fff" },
+      { bg: "#F39C12", fg: "#fff" },
     ],
   },
   {
-    name: "Earth Tones",
+    name: "Soft & Modern",
     pairs: [
-      { bg: "#8D6E63", fg: "#ffffff" },
-      { bg: "#A1887F", fg: "#ffffff" },
-      { bg: "#795548", fg: "#ffffff" },
-      { bg: "#4E342E", fg: "#ffffff" },
-      { bg: "#6D4C41", fg: "#ffffff" },
-      { bg: "#3E2723", fg: "#D7CCC8" },
+      { bg: "#6C5CE7", fg: "#fff" },
+      { bg: "#00CEC9", fg: "#fff" },
+      { bg: "#FD79A8", fg: "#fff" },
+      { bg: "#FDCB6E", fg: "#2C3E50" },
+      { bg: "#55E6C1", fg: "#2C3E50" },
+      { bg: "#74B9FF", fg: "#fff" },
+      { bg: "#A29BFE", fg: "#fff" },
+      { bg: "#FF7675", fg: "#fff" },
     ],
   },
 ];

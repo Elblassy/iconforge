@@ -51,7 +51,19 @@ export function SidePanel({ config, onUpdate }: SidePanelProps) {
       {/* Version selector */}
       <VersionSelector
         value={config.odooVersion}
-        onChange={(v) => onUpdate({ odooVersion: v })}
+        onChange={(v) => {
+          const isNew = v === "17.0" || v === "18.0" || v === "19.0";
+          const wasOld = config.odooVersion === "16.0";
+          onUpdate({
+            odooVersion: v,
+            // Auto-switch to transparent bg when switching to 17+
+            ...(isNew && wasOld ? { backgroundColor: "transparent" } : {}),
+            // Auto-switch to solid bg when switching back to 16
+            ...(v === "16.0" && config.backgroundColor === "transparent"
+              ? { backgroundColor: "#714BC2" }
+              : {}),
+          });
+        }}
       />
 
       <Separator />
