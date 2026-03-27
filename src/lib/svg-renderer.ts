@@ -155,31 +155,44 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
     for (const url of urls) {
       const svgEl = await fetchSvgElement(url);
       if (svgEl) {
-        let viewBox = svgEl.getAttribute("viewBox") || "0 0 50 50";
+        // Get original viewBox to calculate scaling
+        const vb = svgEl.getAttribute("viewBox") || "0 0 16 16";
+        const [vbX, vbY, vbW, vbH] = vb.split(" ").map(Number);
 
-        if (fill.startsWith("url(")) {
-          // Gradient/split: inject defs and set fill on shapes
-          recolorSvg(svgEl, fill);
-          svgEl.setAttribute("width", "50");
-          svgEl.setAttribute("height", "50");
-          // Inject defs
-          const defsEl = new DOMParser().parseFromString(
-            `<svg xmlns="http://www.w3.org/2000/svg">${defs}</svg>`,
-            "image/svg+xml"
-          ).querySelector("defs");
-          if (defsEl) svgEl.prepend(defsEl);
-          return new XMLSerializer()
-            .serializeToString(svgEl)
-            .replace(/<\?xml[^?]*\?>\s*/g, "");
-        }
+        // Scale icon to fill ~90% of the 50x50 output (padding like Odoo)
+        const targetSize = 50;
+        const padding = targetSize * 0.05; // 5% padding on each side
+        const innerSize = targetSize - padding * 2;
+        const scale = innerSize / Math.max(vbW, vbH);
+        const offsetX = padding + (innerSize - vbW * scale) / 2 - vbX * scale;
+        const offsetY = padding + (innerSize - vbH * scale) / 2 - vbY * scale;
 
-        // Solid color
+        // Recolor shapes
         recolorSvg(svgEl, fill);
-        svgEl.setAttribute("width", "50");
-        svgEl.setAttribute("height", "50");
-        return new XMLSerializer()
-          .serializeToString(svgEl)
-          .replace(/<\?xml[^?]*\?>\s*/g, "");
+
+        // Extract inner content
+        const serializer = new XMLSerializer();
+        let innerContent = "";
+        svgEl.childNodes.forEach((node) => {
+          if (node.nodeType === 1) { // Element nodes only
+            const tagName = (node as Element).tagName?.toLowerCase();
+            if (tagName !== "defs" && tagName !== "style") {
+              innerContent += serializer.serializeToString(node);
+            }
+          }
+        });
+
+        // Build new 50x50 SVG with scaled content
+        const parts: string[] = [
+          `<svg width="${targetSize}" height="${targetSize}" viewBox="0 0 ${targetSize} ${targetSize}" xmlns="http://www.w3.org/2000/svg">`,
+        ];
+        if (defs) parts.push(`  ${defs}`);
+        parts.push(`  <g transform="translate(${offsetX.toFixed(2)}, ${offsetY.toFixed(2)}) scale(${scale.toFixed(4)})">`);
+        parts.push(`    ${innerContent}`);
+        parts.push(`  </g>`);
+        parts.push(`</svg>`);
+
+        return parts.join("\n");
       }
     }
     console.warn("Odoo 17+ SVG: no SVG found for", source.iconClass);
