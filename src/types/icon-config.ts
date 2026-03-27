@@ -85,6 +85,6 @@ export const DEFAULT_CONFIG: IconConfig = {
   backgroundColor: "transparent",
   iconColor: "#714BC2",
   iconWidth: ICON_SIZE,
-  fontSize: 64,
+  fontSize: 96,
   fontWeight: 900,
 };
