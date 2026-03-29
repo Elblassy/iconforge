@@ -23,28 +23,21 @@ export type IconSource =
       imageDataUrl: string;
     };
 
-export type IconColorMode =
-  | "solid"
-  | "gradient-diagonal"
-  | "gradient-horizontal"
-  | "gradient-vertical"
-  | "gradient-radial"
-  | "split-horizontal"
-  | "split-vertical"
-  | "split-diagonal";
+/** Icon color modes inspired by Odoo's actual icon design system */
+export type IconColorMode = "solid" | "tinted" | "complementary" | "tricolor";
 
 export interface IconColorConfig {
   mode: IconColorMode;
-  color1: string; // primary icon color
-  color2: string; // secondary color for gradients/splits
-  midpoint: number; // 0-100, where the transition happens (default 50)
+  color1: string; // primary color
+  color2: string; // secondary color (used in complementary/tricolor)
+  color3: string; // tertiary color (used in tricolor)
 }
 
 export interface IconConfig {
   odooVersion: OdooVersion;
   source: IconSource;
   backgroundColor: string;
-  iconColor: string; // kept for backward compat, same as colorConfig.color1
+  iconColor: string;
   iconWidth: number;
   fontSize: number;
   fontWeight: 300 | 400 | 700 | 900;
@@ -84,7 +77,7 @@ export const DEFAULT_CONFIG: IconConfig = {
     iconClass: "bi bi-box",
   },
   backgroundColor: "transparent",
-  iconColor: "#714BC2",
+  iconColor: "#985184",
   iconWidth: ICON_SIZE,
   fontSize: 96,
   fontWeight: 900,

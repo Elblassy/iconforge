@@ -138,7 +138,11 @@ export class IconRenderer {
   }
 
   /**
-   * Draw the icon/text with a drop shadow beneath it.
+   * Draw the icon with Odoo-style layered colors.
+   * - solid: single color
+   * - tinted: auto-generated dark/light + main color, offset layers
+   * - complementary: 2 colors, offset layers
+   * - tricolor: 3 colors, offset layers (like Odoo Sale/HR/Stock)
    */
   drawIconWithShadow(
     ctx: CanvasRenderingContext2D,
@@ -146,63 +150,93 @@ export class IconRenderer {
     size: number,
     versionConfig: OdooVersionConfig
   ): void {
-    ctx.save();
+    const cc = config.colorConfig;
+    const mode = cc?.mode ?? "solid";
 
-    const shadowOffsetY = size * versionConfig.dropShadowOffsetPercent;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = shadowOffsetY;
-    ctx.shadowBlur = size * 0.04;
-    ctx.shadowColor = hexToRgba("#000000", versionConfig.dropShadowAlpha);
+    if (mode === "solid" || !cc) {
+      // Simple single-color draw with drop shadow
+      ctx.save();
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = size * versionConfig.dropShadowOffsetPercent;
+      ctx.shadowBlur = size * 0.04;
+      ctx.shadowColor = hexToRgba("#000000", versionConfig.dropShadowAlpha);
+      this.drawText(ctx, config, size / 2, size / 2, config.iconColor);
+      ctx.restore();
+      return;
+    }
 
-    this.drawText(ctx, config, size / 2, size / 2, config.iconColor, true);
-
-    ctx.restore();
+    // Multi-color: draw offset layers
+    const layers = this._getColorLayers(cc, size);
+    for (const layer of layers) {
+      ctx.save();
+      ctx.globalAlpha = layer.opacity;
+      this.drawText(ctx, config, size / 2 + layer.offsetX, size / 2 + layer.offsetY, layer.color);
+      ctx.restore();
+    }
   }
 
   /**
-   * Draw text (or icon glyph) onto the canvas at (x, y).
-   * Source type "image" is skipped here (handled separately via renderWithImage).
-   *
-   * When `color` is a plain string, it's used as a solid fill.
-   * When `useColorConfig` is true, the icon's colorConfig is used to create
-   * gradients/splits (only for the main icon draw, not for shadows).
+   * Get the color layers for multi-color rendering.
+   * Each layer has a color, offset, and opacity — creating the Odoo overlapping effect.
+   */
+  private _getColorLayers(
+    cc: IconColorConfig,
+    size: number
+  ): { color: string; offsetX: number; offsetY: number; opacity: number }[] {
+    const shift = size * 0.08; // how much each layer offsets
+
+    if (cc.mode === "tinted") {
+      const dark = shadeColor(cc.color1, -30);
+      const light = shadeColor(cc.color1, 40);
+      return [
+        { color: light, offsetX: shift, offsetY: shift, opacity: 0.7 },
+        { color: dark, offsetX: -shift * 0.5, offsetY: -shift * 0.5, opacity: 0.8 },
+        { color: cc.color1, offsetX: 0, offsetY: 0, opacity: 1 },
+      ];
+    }
+
+    if (cc.mode === "complementary") {
+      return [
+        { color: cc.color2, offsetX: shift, offsetY: shift * 0.8, opacity: 0.75 },
+        { color: cc.color1, offsetX: -shift * 0.3, offsetY: -shift * 0.3, opacity: 1 },
+      ];
+    }
+
+    if (cc.mode === "tricolor") {
+      return [
+        { color: cc.color3, offsetX: shift * 1.2, offsetY: shift, opacity: 0.65 },
+        { color: cc.color2, offsetX: shift * 0.3, offsetY: shift * 0.4, opacity: 0.8 },
+        { color: cc.color1, offsetX: -shift * 0.4, offsetY: -shift * 0.3, opacity: 1 },
+      ];
+    }
+
+    return [{ color: cc.color1, offsetX: 0, offsetY: 0, opacity: 1 }];
+  }
+
+  /**
+   * Draw text (or icon glyph) onto the canvas at (x, y) with a solid color.
    */
   drawText(
     ctx: CanvasRenderingContext2D,
     config: IconConfig,
     x: number,
     y: number,
-    color: string,
-    useColorConfig = false
+    color: string
   ): void {
     const { source, fontSize, fontWeight } = config;
 
-    if (source.type === "image") {
-      return;
-    }
+    if (source.type === "image") return;
 
     ctx.save();
+    ctx.fillStyle = color;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    // Set font
     if (source.type === "text") {
       ctx.font = `${fontWeight} ${fontSize}px "${source.fontFamily}"`;
-    } else if (source.type === "icon") {
-      ctx.font = `${fontWeight} ${fontSize}px "${source.iconSet}"`;
-    }
-
-    // Determine fill style
-    if (useColorConfig && config.colorConfig && config.colorConfig.mode !== "solid") {
-      ctx.fillStyle = this._createColorFill(ctx, config.colorConfig, config.iconWidth);
-    } else {
-      ctx.fillStyle = color;
-    }
-
-    // Draw
-    if (source.type === "text") {
       ctx.fillText(source.text, x, y);
     } else if (source.type === "icon") {
+      ctx.font = `${fontWeight} ${fontSize}px "${source.iconSet}"`;
       const glyph = source.unicodeChar || this._resolveIconUnicode(source.iconClass);
       if (glyph) {
         ctx.fillText(glyph, x, y);
@@ -314,80 +348,7 @@ export class IconRenderer {
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  /**
-   * Create a CanvasGradient or CanvasPattern based on the color config.
-   */
-  private _createColorFill(
-    ctx: CanvasRenderingContext2D,
-    cc: IconColorConfig,
-    size: number
-  ): string | CanvasGradient {
-    let gradient: CanvasGradient;
 
-    const m = (cc.midpoint ?? 50) / 100; // 0-1
-    // Blend zone is 20% of the total, centered on the midpoint
-    const blend = 0.1;
-    const s1 = Math.max(0, m - blend); // end of solid color1
-    const s2 = Math.min(1, m + blend); // start of solid color2
-
-    switch (cc.mode) {
-      case "gradient-diagonal":
-        gradient = ctx.createLinearGradient(0, size, size, 0);
-        gradient.addColorStop(0, cc.color1);
-        gradient.addColorStop(s1, cc.color1);
-        gradient.addColorStop(s2, cc.color2);
-        gradient.addColorStop(1, cc.color2);
-        return gradient;
-
-      case "gradient-horizontal":
-        gradient = ctx.createLinearGradient(0, 0, size, 0);
-        gradient.addColorStop(0, cc.color1);
-        gradient.addColorStop(s1, cc.color1);
-        gradient.addColorStop(s2, cc.color2);
-        gradient.addColorStop(1, cc.color2);
-        return gradient;
-
-      case "gradient-vertical":
-        gradient = ctx.createLinearGradient(0, 0, 0, size);
-        gradient.addColorStop(0, cc.color1);
-        gradient.addColorStop(s1, cc.color1);
-        gradient.addColorStop(s2, cc.color2);
-        gradient.addColorStop(1, cc.color2);
-        return gradient;
-
-      case "gradient-radial":
-        gradient = ctx.createRadialGradient(
-          size / 2, size / 2, 0,
-          size / 2, size / 2, size / 2
-        );
-        gradient.addColorStop(0, cc.color1);
-        gradient.addColorStop(s1, cc.color1);
-        gradient.addColorStop(s2, cc.color2);
-        gradient.addColorStop(1, cc.color2);
-        return gradient;
-
-      case "split-horizontal":
-        gradient = ctx.createLinearGradient(0, 0, size, 0);
-        gradient.addColorStop(m - 0.001, cc.color1);
-        gradient.addColorStop(m + 0.001, cc.color2);
-        return gradient;
-
-      case "split-vertical":
-        gradient = ctx.createLinearGradient(0, 0, 0, size);
-        gradient.addColorStop(m - 0.001, cc.color1);
-        gradient.addColorStop(m + 0.001, cc.color2);
-        return gradient;
-
-      case "split-diagonal":
-        gradient = ctx.createLinearGradient(0, size, size, 0);
-        gradient.addColorStop(m - 0.001, cc.color1);
-        gradient.addColorStop(m + 0.001, cc.color2);
-        return gradient;
-
-      default:
-        return cc.color1;
-    }
-  }
 
   /**
    * Resolve a CSS icon class to its unicode character via the DOM.

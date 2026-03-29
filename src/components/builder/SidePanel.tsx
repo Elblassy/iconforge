@@ -12,6 +12,13 @@ import { MultiColorControls } from "./MultiColorControls";
 import { getVersionConfig } from "@/lib/odoo-versions";
 import type { IconConfig, IconColorConfig } from "@/types/icon-config";
 
+const DEFAULT_COLOR_CONFIG: IconColorConfig = {
+  mode: "solid",
+  color1: "#985184",
+  color2: "#F86126",
+  color3: "#FBB945",
+};
+
 interface SidePanelProps {
   config: IconConfig;
   onUpdate: (updates: Partial<IconConfig>) => void;
@@ -21,10 +28,8 @@ export function SidePanel({ config, onUpdate }: SidePanelProps) {
   const versionDefaults = getVersionConfig(config.odooVersion);
 
   const colorConfig: IconColorConfig = config.colorConfig ?? {
-    mode: "solid",
+    ...DEFAULT_COLOR_CONFIG,
     color1: config.iconColor,
-    color2: "#F86126",
-    midpoint: 50,
   };
 
   function handleColorConfigChange(cc: IconColorConfig) {

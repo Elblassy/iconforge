@@ -1,5 +1,6 @@
 import type { IconConfig, IconColorConfig } from "@/types/icon-config";
 import { IconRenderer } from "./icon-renderer";
+import { shadeColor } from "./color-utils";
 
 // ─── CDN URL mapping ────────────────────────────────────────────────────────
 
@@ -11,7 +12,6 @@ function getIconSvgUrls(iconSet: string, iconClass: string): string[] {
     const name = parts.find((p) => p.startsWith("bi-"))?.replace("bi-", "");
     if (name) urls.push(`https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/${name}.svg`);
   }
-
   if (iconSet === "Font Awesome 6 Free") {
     const stylePart = parts.find((p) => ["fa-solid", "fa-regular", "fa-brands"].includes(p));
     const namePart = parts.find((p) => p.startsWith("fa-") && !["fa-solid", "fa-regular", "fa-brands"].includes(p));
@@ -19,7 +19,6 @@ function getIconSvgUrls(iconSet: string, iconClass: string): string[] {
     const name = namePart?.replace("fa-", "");
     if (name) urls.push(`https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/svgs/${style}/${name}.svg`);
   }
-
   if (iconSet === "remixicon") {
     const name = parts[0]?.replace("ri-", "");
     if (name) {
@@ -28,7 +27,6 @@ function getIconSvgUrls(iconSet: string, iconClass: string): string[] {
       }
     }
   }
-
   if (iconSet === "tabler-icons") {
     const name = parts.find((p) => p.startsWith("ti-") && p !== "ti")?.replace("ti-", "");
     if (name) {
@@ -36,7 +34,6 @@ function getIconSvgUrls(iconSet: string, iconClass: string): string[] {
       urls.push(`https://cdn.jsdelivr.net/npm/@tabler/icons@latest/icons/filled/${name}.svg`);
     }
   }
-
   return urls;
 }
 
@@ -49,84 +46,71 @@ async function fetchSvgElement(url: string): Promise<SVGSVGElement | null> {
   } catch { return null; }
 }
 
-// ─── SVG color helpers ──────────────────────────────────────────────────────
+// ─── SVG helpers ────────────────────────────────────────────────────────────
 
-/**
- * Build SVG <defs> for gradient/split fill based on colorConfig, and return
- * the fill attribute value (either a color string or a url(#id) reference).
- */
-function buildSvgColorDefs(cc: IconColorConfig | undefined, iconColor: string): { defs: string; fill: string } {
-  if (!cc || cc.mode === "solid") {
-    return { defs: "", fill: escapeXml(iconColor) };
-  }
-
-  const id = "iconFill";
-  const c1 = escapeXml(cc.color1);
-  const c2 = escapeXml(cc.color2);
-  const m = (cc.midpoint ?? 50) / 100;
-  const blend = 0.1;
-  const s1 = Math.max(0, m - blend).toFixed(3);
-  const s2 = Math.min(1, m + blend).toFixed(3);
-
-  function gradStops() {
-    return `<stop offset="0" stop-color="${c1}"/><stop offset="${s1}" stop-color="${c1}"/><stop offset="${s2}" stop-color="${c2}"/><stop offset="1" stop-color="${c2}"/>`;
-  }
-
-  function splitStops() {
-    const mLo = (m - 0.001).toFixed(3);
-    const mHi = (m + 0.001).toFixed(3);
-    return `<stop offset="${mLo}" stop-color="${c1}"/><stop offset="${mHi}" stop-color="${c2}"/>`;
-  }
-
-  switch (cc.mode) {
-    case "gradient-diagonal":
-      return {
-        defs: `<defs><linearGradient id="${id}" x1="0" y1="1" x2="1" y2="0" gradientUnits="objectBoundingBox">${gradStops()}</linearGradient></defs>`,
-        fill: `url(#${id})`,
-      };
-    case "gradient-horizontal":
-      return {
-        defs: `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">${gradStops()}</linearGradient></defs>`,
-        fill: `url(#${id})`,
-      };
-    case "gradient-vertical":
-      return {
-        defs: `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">${gradStops()}</linearGradient></defs>`,
-        fill: `url(#${id})`,
-      };
-    case "gradient-radial":
-      return {
-        defs: `<defs><radialGradient id="${id}" cx="0.5" cy="0.5" r="0.5" gradientUnits="objectBoundingBox">${gradStops()}</radialGradient></defs>`,
-        fill: `url(#${id})`,
-      };
-    case "split-horizontal":
-      return {
-        defs: `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">${splitStops()}</linearGradient></defs>`,
-        fill: `url(#${id})`,
-      };
-    case "split-vertical":
-      return {
-        defs: `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">${splitStops()}</linearGradient></defs>`,
-        fill: `url(#${id})`,
-      };
-    case "split-diagonal":
-      return {
-        defs: `<defs><linearGradient id="${id}" x1="0" y1="1" x2="1" y2="0" gradientUnits="objectBoundingBox">${splitStops()}</linearGradient></defs>`,
-        fill: `url(#${id})`,
-      };
-    default:
-      return { defs: "", fill: escapeXml(iconColor) };
-  }
-}
-
-/**
- * Apply fill to all shapes in an SVG element.
- */
 function recolorSvg(svgEl: SVGSVGElement, fill: string): void {
   svgEl.querySelectorAll("path, circle, rect, polygon, polyline, line, ellipse").forEach((shape) => {
     if (shape.getAttribute("fill") !== "none") shape.setAttribute("fill", fill);
     if (shape.getAttribute("stroke") && shape.getAttribute("stroke") !== "none") shape.setAttribute("stroke", fill);
   });
+}
+
+function extractInnerContent(svgEl: SVGSVGElement): string {
+  const serializer = new XMLSerializer();
+  let content = "";
+  svgEl.childNodes.forEach((node) => {
+    if (node.nodeType === 1) {
+      const tag = (node as Element).tagName?.toLowerCase();
+      if (tag !== "defs" && tag !== "style") {
+        content += serializer.serializeToString(node);
+      }
+    }
+  });
+  return content;
+}
+
+function recolorContent(content: string, color: string): string {
+  return content
+    .replace(/fill="(?!none)[^"]*"/g, `fill="${color}"`)
+    .replace(/stroke="(?!none)[^"]*"/g, `stroke="${color}"`);
+}
+
+/**
+ * Get color layers for multi-color SVG output.
+ */
+function getColorLayers(cc: IconColorConfig | undefined, iconColor: string): { color: string; offsetPercent: number; opacity: number }[] {
+  if (!cc || cc.mode === "solid") {
+    return [{ color: iconColor, offsetPercent: 0, opacity: 1 }];
+  }
+
+  const shift = 8; // percentage offset
+
+  if (cc.mode === "tinted") {
+    const dark = shadeColor(cc.color1, -30);
+    const light = shadeColor(cc.color1, 40);
+    return [
+      { color: light, offsetPercent: shift, opacity: 0.7 },
+      { color: dark, offsetPercent: -shift * 0.5, opacity: 0.8 },
+      { color: cc.color1, offsetPercent: 0, opacity: 1 },
+    ];
+  }
+
+  if (cc.mode === "complementary") {
+    return [
+      { color: cc.color2, offsetPercent: shift, opacity: 0.75 },
+      { color: cc.color1, offsetPercent: -shift * 0.3, opacity: 1 },
+    ];
+  }
+
+  if (cc.mode === "tricolor") {
+    return [
+      { color: cc.color3, offsetPercent: shift * 1.2, opacity: 0.65 },
+      { color: cc.color2, offsetPercent: shift * 0.3, opacity: 0.8 },
+      { color: cc.color1, offsetPercent: -shift * 0.4, opacity: 1 },
+    ];
+  }
+
+  return [{ color: iconColor, offsetPercent: 0, opacity: 1 }];
 }
 
 // ─── Public API ─────────────────────────────────────────────────────────────
@@ -154,14 +138,13 @@ export function renderSvg(config: IconConfig, canvasDataUrl?: string): string {
 }
 
 /**
- * Render the icon as Odoo 17+ style SVG.
- * - Icon fonts: fetch real SVG from CDN, apply color/gradient
- * - Text/image: render on canvas, embed as base64
- * No background, no overlay gradient.
+ * Render the icon as Odoo 17+ style SVG with layered multi-color support.
+ * - Icon fonts: fetch real SVG from CDN, duplicate as offset colored layers
+ * - Text/image: render via canvas, embed as base64
  */
 export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
   const source = config.source;
-  const { defs, fill } = buildSvgColorDefs(config.colorConfig, config.iconColor);
+  const layers = getColorLayers(config.colorConfig, config.iconColor);
 
   // ── Icon font: fetch real SVG paths ──
   if (source.type === "icon") {
@@ -169,56 +152,54 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
     for (const url of urls) {
       const svgEl = await fetchSvgElement(url);
       if (svgEl) {
-        // Get original viewBox to calculate scaling
         const vb = svgEl.getAttribute("viewBox") || "0 0 16 16";
         const [vbX, vbY, vbW, vbH] = vb.split(" ").map(Number);
 
-        // Scale icon to fill ~90% of the 50x50 output (padding like Odoo)
         const targetSize = 50;
-        const padding = targetSize * 0.05; // 5% padding on each side
+        const padding = targetSize * 0.05;
         const innerSize = targetSize - padding * 2;
         const scale = innerSize / Math.max(vbW, vbH);
-        const offsetX = padding + (innerSize - vbW * scale) / 2 - vbX * scale;
-        const offsetY = padding + (innerSize - vbH * scale) / 2 - vbY * scale;
+        const baseOffsetX = padding + (innerSize - vbW * scale) / 2 - vbX * scale;
+        const baseOffsetY = padding + (innerSize - vbH * scale) / 2 - vbY * scale;
 
-        // Recolor shapes
-        recolorSvg(svgEl, fill);
+        const innerContent = extractInnerContent(svgEl);
 
-        // Extract inner content
-        const serializer = new XMLSerializer();
-        let innerContent = "";
-        svgEl.childNodes.forEach((node) => {
-          if (node.nodeType === 1) { // Element nodes only
-            const tagName = (node as Element).tagName?.toLowerCase();
-            if (tagName !== "defs" && tagName !== "style") {
-              innerContent += serializer.serializeToString(node);
-            }
-          }
-        });
-
-        // Build new 50x50 SVG with scaled content
         const parts: string[] = [
           `<svg width="${targetSize}" height="${targetSize}" viewBox="0 0 ${targetSize} ${targetSize}" xmlns="http://www.w3.org/2000/svg">`,
         ];
-        if (defs) parts.push(`  ${defs}`);
-        parts.push(`  <g transform="translate(${offsetX.toFixed(2)}, ${offsetY.toFixed(2)}) scale(${scale.toFixed(4)})">`);
-        parts.push(`    ${innerContent}`);
-        parts.push(`  </g>`);
-        parts.push(`</svg>`);
 
+        for (const layer of layers) {
+          const px = (layer.offsetPercent / 100) * targetSize;
+          const ox = (baseOffsetX + px).toFixed(2);
+          const oy = (baseOffsetY + px * 0.8).toFixed(2);
+          const colored = recolorContent(innerContent, layer.color);
+          parts.push(`  <g transform="translate(${ox}, ${oy}) scale(${scale.toFixed(4)})" opacity="${layer.opacity}">`);
+          parts.push(`    ${colored}`);
+          parts.push(`  </g>`);
+        }
+
+        parts.push(`</svg>`);
         return parts.join("\n");
       }
     }
     console.warn("Odoo 17+ SVG: no SVG found for", source.iconClass);
   }
 
-  // ── Text/image/fallback: render via canvas and embed as base64 ──
+  // ── Text/image/fallback: render via canvas ──
+  if (source.type === "image" && source.imageDataUrl) {
+    return [
+      `<svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">`,
+      `  <image width="50" height="50" href="${source.imageDataUrl}" preserveAspectRatio="xMidYMid meet"/>`,
+      `</svg>`,
+    ].join("\n");
+  }
+
+  // Canvas render for text or icon fallback (includes multi-color layers)
   const renderSize = 256;
   const canvas = document.createElement("canvas");
   canvas.width = renderSize;
   canvas.height = renderSize;
   const ctx = canvas.getContext("2d")!;
-
   const scaledFontSize = Math.round(renderSize * (config.fontSize / config.iconWidth));
 
   if (source.type === "text") {
@@ -226,36 +207,30 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
     ctx.textBaseline = "middle";
     ctx.font = `${config.fontWeight} ${scaledFontSize}px "${source.fontFamily}"`;
 
-    // Apply color mode to canvas
-    const cc = config.colorConfig;
-    if (cc && cc.mode !== "solid") {
-      const renderer = new IconRenderer();
-      ctx.fillStyle = renderer["_createColorFill"](ctx, cc, renderSize);
-    } else {
-      ctx.fillStyle = config.iconColor;
+    for (const layer of layers) {
+      ctx.save();
+      ctx.globalAlpha = layer.opacity;
+      ctx.fillStyle = layer.color;
+      const px = (layer.offsetPercent / 100) * renderSize;
+      ctx.fillText(source.text, renderSize / 2 + px, renderSize / 2 + px * 0.8);
+      ctx.restore();
     }
-    ctx.fillText(source.text, renderSize / 2, renderSize / 2);
-  } else if (source.type === "image" && source.imageDataUrl) {
-    // Embed image directly
-    return [
-      `<svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">`,
-      `  <image width="50" height="50" href="${source.imageDataUrl}" preserveAspectRatio="xMidYMid meet"/>`,
-      `</svg>`,
-    ].join("\n");
   } else if (source.type === "icon") {
-    // Icon font fallback — render glyph on canvas
+    const renderer = new IconRenderer();
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.font = `${config.fontWeight} ${scaledFontSize}px "${source.iconSet}"`;
-    const renderer = new IconRenderer();
-    const cc = config.colorConfig;
-    if (cc && cc.mode !== "solid") {
-      ctx.fillStyle = renderer["_createColorFill"](ctx, cc, renderSize);
-    } else {
-      ctx.fillStyle = config.iconColor;
-    }
     const glyph = source.unicodeChar || renderer["_resolveIconUnicode"](source.iconClass);
-    if (glyph) ctx.fillText(glyph, renderSize / 2, renderSize / 2);
+    if (glyph) {
+      for (const layer of layers) {
+        ctx.save();
+        ctx.globalAlpha = layer.opacity;
+        ctx.fillStyle = layer.color;
+        const px = (layer.offsetPercent / 100) * renderSize;
+        ctx.fillText(glyph, renderSize / 2 + px, renderSize / 2 + px * 0.8);
+        ctx.restore();
+      }
+    }
   }
 
   const dataUrl = canvas.toDataURL("image/png");
