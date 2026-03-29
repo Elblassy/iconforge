@@ -37,6 +37,8 @@ export function useIconRenderer(
           if (matchingSet) {
             await loadIconSetCSS(matchingSet.id);
           }
+          // Wait for all fonts to be fully loaded and available
+          await document.fonts.ready;
         }
 
         if (cancelled) return;
@@ -130,9 +132,16 @@ export function useIconRenderer(
       doRender();
     }, 16);
 
+    // Retry render after a delay to catch late-loading icon fonts
+    // (fonts may load after the first render, showing a square initially)
+    const retryTimer = setTimeout(() => {
+      if (!cancelled) doRender();
+    }, 600);
+
     return () => {
       cancelled = true;
       clearTimeout(timer);
+      clearTimeout(retryTimer);
     };
   }, [config, containerRef]);
 
