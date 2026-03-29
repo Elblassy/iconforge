@@ -1,4 +1,4 @@
-import type { IconConfig } from "@/types/icon-config";
+import type { IconConfig, IconColorConfig } from "@/types/icon-config";
 
 export interface ColorPalette {
   name: string;
@@ -9,29 +9,29 @@ export const COLOR_PALETTES: ColorPalette[] = [
   {
     name: "Odoo 17+ Style",
     pairs: [
-      { bg: "#714BC2", fg: "#fff" }, // Purple (Sales, CRM)
-      { bg: "#E8536D", fg: "#fff" }, // Coral/Pink (Dashboards)
-      { bg: "#00A09D", fg: "#fff" }, // Teal (Inventory, Purchase)
-      { bg: "#F39C12", fg: "#fff" }, // Amber/Gold (Accounting)
-      { bg: "#2C8397", fg: "#fff" }, // Deep teal (Website)
-      { bg: "#21B799", fg: "#fff" }, // Mint green
-      { bg: "#3B5998", fg: "#fff" }, // Navy blue
-      { bg: "#D4526E", fg: "#fff" }, // Muted rose
-      { bg: "#2E4053", fg: "#fff" }, // Dark slate
-      { bg: "#8E44AD", fg: "#fff" }, // Rich purple
+      { bg: "#985184", fg: "#fff" },
+      { bg: "#E8536D", fg: "#fff" },
+      { bg: "#00A09D", fg: "#fff" },
+      { bg: "#F39C12", fg: "#fff" },
+      { bg: "#2C8397", fg: "#fff" },
+      { bg: "#21B799", fg: "#fff" },
+      { bg: "#3B5998", fg: "#fff" },
+      { bg: "#D4526E", fg: "#fff" },
+      { bg: "#2E4053", fg: "#fff" },
+      { bg: "#8E44AD", fg: "#fff" },
     ],
   },
   {
     name: "Odoo Multicolor",
     pairs: [
-      { bg: "#985184", fg: "#fff" }, // Muted purple
-      { bg: "#FBB945", fg: "#fff" }, // Warm gold
-      { bg: "#FC868B", fg: "#fff" }, // Soft coral
-      { bg: "#F86126", fg: "#fff" }, // Vivid orange
-      { bg: "#47C1A3", fg: "#fff" }, // Jade green
-      { bg: "#3E7CB1", fg: "#fff" }, // Steel blue
-      { bg: "#962B48", fg: "#fff" }, // Burgundy
-      { bg: "#1B998B", fg: "#fff" }, // Deep mint
+      { bg: "#985184", fg: "#fff" },
+      { bg: "#FBB945", fg: "#fff" },
+      { bg: "#FC868B", fg: "#fff" },
+      { bg: "#F86126", fg: "#fff" },
+      { bg: "#47C1A3", fg: "#fff" },
+      { bg: "#3E7CB1", fg: "#fff" },
+      { bg: "#962B48", fg: "#fff" },
+      { bg: "#1B998B", fg: "#fff" },
     ],
   },
   {
@@ -71,117 +71,240 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
   {
     name: "Sales",
     config: {
-      backgroundColor: "#714BC2",
-      iconColor: "#ffffff",
+      backgroundColor: "transparent",
+      iconColor: "#985184",
       source: {
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-graph-up-arrow",
         unicodeChar: "\uF5E3",
       },
+      colorConfig: {
+        mode: "tricolor",
+        color1: "#985184",
+        color2: "#F86126",
+        color3: "#FBB945",
+        blend: false,
+      },
     },
   },
   {
     name: "Inventory",
     config: {
-      backgroundColor: "#00A09D",
-      iconColor: "#ffffff",
+      backgroundColor: "transparent",
+      iconColor: "#985184",
       source: {
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-box-seam",
         unicodeChar: "\uF1C1",
       },
+      colorConfig: {
+        mode: "tricolor",
+        color1: "#FBB945",
+        color2: "#F86126",
+        color3: "#985184",
+        blend: false,
+      },
     },
   },
   {
     name: "HR",
     config: {
-      backgroundColor: "#E9AB17",
-      iconColor: "#ffffff",
+      backgroundColor: "transparent",
+      iconColor: "#985184",
       source: {
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-people",
         unicodeChar: "\uF4CF",
       },
+      colorConfig: {
+        mode: "tricolor",
+        color1: "#985184",
+        color2: "#FBB945",
+        color3: "#1AD3BB",
+        blend: false,
+      },
     },
   },
   {
     name: "Accounting",
     config: {
-      backgroundColor: "#017E84",
-      iconColor: "#ffffff",
+      backgroundColor: "transparent",
+      iconColor: "#088BF5",
       source: {
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-calculator",
         unicodeChar: "\uF20F",
       },
+      colorConfig: {
+        mode: "tinted",
+        color1: "#088BF5",
+        color2: "#144496",
+        color3: "#2EBCFA",
+        blend: false,
+      },
     },
   },
   {
     name: "CRM",
     config: {
-      backgroundColor: "#875A7B",
-      iconColor: "#ffffff",
+      backgroundColor: "transparent",
+      iconColor: "#985184",
       source: {
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-person-lines-fill",
         unicodeChar: "\uF4D4",
       },
+      colorConfig: {
+        mode: "complementary",
+        color1: "#985184",
+        color2: "#F86126",
+        color3: "#FBB945",
+        blend: true,
+      },
     },
   },
   {
     name: "Website",
     config: {
-      backgroundColor: "#2C8397",
-      iconColor: "#ffffff",
+      backgroundColor: "transparent",
+      iconColor: "#2C8397",
       source: {
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-globe",
         unicodeChar: "\uF38F",
       },
+      colorConfig: {
+        mode: "tricolor",
+        color1: "#2C8397",
+        color2: "#21B799",
+        color3: "#FBB945",
+        blend: true,
+      },
     },
   },
   {
     name: "Manufacturing",
     config: {
-      backgroundColor: "#8D6E63",
-      iconColor: "#ffffff",
+      backgroundColor: "transparent",
+      iconColor: "#985184",
       source: {
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-gear",
         unicodeChar: "\uF3E5",
       },
+      colorConfig: {
+        mode: "complementary",
+        color1: "#985184",
+        color2: "#FBB945",
+        color3: "#F86126",
+        blend: false,
+      },
     },
   },
   {
     name: "Purchase",
     config: {
-      backgroundColor: "#F06050",
-      iconColor: "#ffffff",
+      backgroundColor: "transparent",
+      iconColor: "#00A09D",
       source: {
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-cart3",
         unicodeChar: "\uF237",
       },
+      colorConfig: {
+        mode: "tricolor",
+        color1: "#00A09D",
+        color2: "#985184",
+        color3: "#2E4053",
+        blend: false,
+      },
     },
   },
   {
     name: "Project",
     config: {
-      backgroundColor: "#547F93",
-      iconColor: "#ffffff",
+      backgroundColor: "transparent",
+      iconColor: "#F39C12",
       source: {
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-kanban",
         unicodeChar: "\uF41D",
+      },
+      colorConfig: {
+        mode: "tricolor",
+        color1: "#F39C12",
+        color2: "#E8536D",
+        color3: "#985184",
+        blend: true,
+      },
+    },
+  },
+  {
+    name: "Discuss",
+    config: {
+      backgroundColor: "transparent",
+      iconColor: "#F86126",
+      source: {
+        type: "icon",
+        iconSet: "bootstrap-icons",
+        iconClass: "bi bi-chat-dots",
+        unicodeChar: "\uF252",
+      },
+      colorConfig: {
+        mode: "tinted",
+        color1: "#F86126",
+        color2: "#F86126",
+        color3: "#F86126",
+        blend: false,
+      },
+    },
+  },
+  {
+    name: "Calendar",
+    config: {
+      backgroundColor: "transparent",
+      iconColor: "#E8536D",
+      source: {
+        type: "icon",
+        iconSet: "bootstrap-icons",
+        iconClass: "bi bi-calendar-event",
+        unicodeChar: "\uF1EA",
+      },
+      colorConfig: {
+        mode: "complementary",
+        color1: "#E8536D",
+        color2: "#FBB945",
+        color3: "#FBB945",
+        blend: true,
+      },
+    },
+  },
+  {
+    name: "Settings",
+    config: {
+      backgroundColor: "transparent",
+      iconColor: "#2E4053",
+      source: {
+        type: "icon",
+        iconSet: "bootstrap-icons",
+        iconClass: "bi bi-sliders",
+        unicodeChar: "\uF578",
+      },
+      colorConfig: {
+        mode: "tricolor",
+        color1: "#2E4053",
+        color2: "#3E7CB1",
+        color3: "#21B799",
+        blend: true,
       },
     },
   },
