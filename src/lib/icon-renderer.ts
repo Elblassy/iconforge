@@ -330,25 +330,19 @@ export class IconRenderer {
       case "gradient-diagonal":
         gradient = ctx.createLinearGradient(0, size, size, 0);
         gradient.addColorStop(0, cc.color1);
-        gradient.addColorStop(m, cc.color1);
-        gradient.addColorStop(m + (1 - m) * 0.4, cc.color2);
-        gradient.addColorStop(1, cc.color2);
+        gradient.addColorStop(m, cc.color2);
         return gradient;
 
       case "gradient-horizontal":
         gradient = ctx.createLinearGradient(0, 0, size, 0);
         gradient.addColorStop(0, cc.color1);
-        gradient.addColorStop(m, cc.color1);
-        gradient.addColorStop(m + (1 - m) * 0.4, cc.color2);
-        gradient.addColorStop(1, cc.color2);
+        gradient.addColorStop(m, cc.color2);
         return gradient;
 
       case "gradient-vertical":
         gradient = ctx.createLinearGradient(0, 0, 0, size);
         gradient.addColorStop(0, cc.color1);
-        gradient.addColorStop(m, cc.color1);
-        gradient.addColorStop(m + (1 - m) * 0.4, cc.color2);
-        gradient.addColorStop(1, cc.color2);
+        gradient.addColorStop(m, cc.color2);
         return gradient;
 
       case "gradient-radial":
@@ -357,33 +351,25 @@ export class IconRenderer {
           size / 2, size / 2, size / 2
         );
         gradient.addColorStop(0, cc.color1);
-        gradient.addColorStop(m * 0.8, cc.color1);
-        gradient.addColorStop(m + (1 - m) * 0.5, cc.color2);
-        gradient.addColorStop(1, cc.color2);
+        gradient.addColorStop(m, cc.color2);
         return gradient;
 
       case "split-horizontal":
         gradient = ctx.createLinearGradient(0, 0, size, 0);
-        gradient.addColorStop(0, cc.color1);
         gradient.addColorStop(m - 0.001, cc.color1);
         gradient.addColorStop(m + 0.001, cc.color2);
-        gradient.addColorStop(1, cc.color2);
         return gradient;
 
       case "split-vertical":
         gradient = ctx.createLinearGradient(0, 0, 0, size);
-        gradient.addColorStop(0, cc.color1);
         gradient.addColorStop(m - 0.001, cc.color1);
         gradient.addColorStop(m + 0.001, cc.color2);
-        gradient.addColorStop(1, cc.color2);
         return gradient;
 
       case "split-diagonal":
         gradient = ctx.createLinearGradient(0, size, size, 0);
-        gradient.addColorStop(0, cc.color1);
         gradient.addColorStop(m - 0.001, cc.color1);
         gradient.addColorStop(m + 0.001, cc.color2);
-        gradient.addColorStop(1, cc.color2);
         return gradient;
 
       default:

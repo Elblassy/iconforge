@@ -229,16 +229,16 @@ function ColorPreviewSwatch({
       bg = color1;
       break;
     case "gradient-diagonal":
-      bg = `linear-gradient(135deg, ${color1} 0%, ${color1} ${m * 0.6}%, ${color2} ${m + (100 - m) * 0.4}%, ${color2} 100%)`;
+      bg = `linear-gradient(135deg, ${color1} 0%, ${color2} ${m}%)`;
       break;
     case "gradient-horizontal":
-      bg = `linear-gradient(90deg, ${color1} 0%, ${color1} ${m * 0.6}%, ${color2} ${m + (100 - m) * 0.4}%, ${color2} 100%)`;
+      bg = `linear-gradient(90deg, ${color1} 0%, ${color2} ${m}%)`;
       break;
     case "gradient-vertical":
-      bg = `linear-gradient(180deg, ${color1} 0%, ${color1} ${m * 0.6}%, ${color2} ${m + (100 - m) * 0.4}%, ${color2} 100%)`;
+      bg = `linear-gradient(180deg, ${color1} 0%, ${color2} ${m}%)`;
       break;
     case "gradient-radial":
-      bg = `radial-gradient(circle, ${color1} ${m * 0.5}%, ${color2} ${m + (100 - m) * 0.5}%)`;
+      bg = `radial-gradient(circle, ${color1} 0%, ${color2} ${m}%)`;
       break;
     case "split-horizontal":
       bg = `linear-gradient(90deg, ${color1} ${m}%, ${color2} ${m}%)`;

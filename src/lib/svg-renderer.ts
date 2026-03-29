@@ -63,18 +63,16 @@ function buildSvgColorDefs(cc: IconColorConfig | undefined, iconColor: string): 
   const id = "iconFill";
   const c1 = escapeXml(cc.color1);
   const c2 = escapeXml(cc.color2);
-  const m = (cc.midpoint ?? 50) / 100;
-  const mPct = (m * 100).toFixed(1);
+  const m = ((cc.midpoint ?? 50) / 100).toFixed(3);
 
   function gradStops() {
-    // Gradient: color1 holds until midpoint, then blends to color2
-    const s1 = (m * 0.6 * 100).toFixed(1);
-    const s2 = ((m + (1 - m) * 0.4) * 100).toFixed(1);
-    return `<stop offset="0" stop-color="${c1}"/><stop offset="${s1}%" stop-color="${c1}"/><stop offset="${s2}%" stop-color="${c2}"/><stop offset="1" stop-color="${c2}"/>`;
+    return `<stop offset="0" stop-color="${c1}"/><stop offset="${m}" stop-color="${c2}"/>`;
   }
 
   function splitStops() {
-    return `<stop offset="${(m - 0.001).toFixed(3)}" stop-color="${c1}"/><stop offset="${(m + 0.001).toFixed(3)}" stop-color="${c2}"/>`;
+    const mLo = (parseFloat(m) - 0.001).toFixed(3);
+    const mHi = (parseFloat(m) + 0.001).toFixed(3);
+    return `<stop offset="${mLo}" stop-color="${c1}"/><stop offset="${mHi}" stop-color="${c2}"/>`;
   }
 
   switch (cc.mode) {
@@ -93,14 +91,11 @@ function buildSvgColorDefs(cc: IconColorConfig | undefined, iconColor: string): 
         defs: `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">${gradStops()}</linearGradient></defs>`,
         fill: `url(#${id})`,
       };
-    case "gradient-radial": {
-      const r1 = (m * 0.8).toFixed(2);
-      const r2 = (m + (1 - m) * 0.5).toFixed(2);
+    case "gradient-radial":
       return {
-        defs: `<defs><radialGradient id="${id}" cx="0.5" cy="0.5" r="0.5" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="${c1}"/><stop offset="${r1}" stop-color="${c1}"/><stop offset="${r2}" stop-color="${c2}"/><stop offset="1" stop-color="${c2}"/></radialGradient></defs>`,
+        defs: `<defs><radialGradient id="${id}" cx="0.5" cy="0.5" r="0.5" gradientUnits="objectBoundingBox">${gradStops()}</radialGradient></defs>`,
         fill: `url(#${id})`,
       };
-    }
     case "split-horizontal":
       return {
         defs: `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">${splitStops()}</linearGradient></defs>`,
