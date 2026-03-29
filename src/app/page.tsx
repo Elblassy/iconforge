@@ -34,7 +34,7 @@ export default function BuilderPage() {
 
   const sidePanelContent = (
     <>
-      <SidePanel config={config} onUpdate={updateConfig} />
+      <SidePanel config={config} onUpdate={updateConfig} onReplace={setConfig} />
       <div className="mt-4 border-t border-border pt-4">
         <ExportPanel config={config} />
       </div>

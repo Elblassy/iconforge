@@ -17,36 +17,17 @@ interface PresetTemplatesProps {
   onApply: (config: IconConfig) => void;
 }
 
-function getPreviewBackground(cc?: Partial<IconColorConfig>): string {
-  if (!cc) return "#985184";
-  const c1 = cc.color1 ?? "#985184";
-  const c2 = cc.color2 ?? c1;
-  const c3 = cc.color3 ?? c2;
-
-  if (cc.mode === "solid") return c1;
-  if (cc.mode === "tinted") return `linear-gradient(135deg, ${c1}cc, ${c1}, ${c1}66)`;
-  if (cc.mode === "complementary") {
-    return cc.blend
-      ? `linear-gradient(135deg, ${c1}, ${c2})`
-      : `linear-gradient(135deg, ${c1} 50%, ${c2} 50%)`;
-  }
-  if (cc.mode === "tricolor") {
-    return cc.blend
-      ? `linear-gradient(135deg, ${c1}, ${c2}, ${c3})`
-      : `linear-gradient(135deg, ${c1} 33%, ${c2} 33%, ${c2} 66%, ${c3} 66%)`;
-  }
-  return c1;
-}
-
 export function PresetTemplates({ onApply }: PresetTemplatesProps) {
   const [open, setOpen] = useState(false);
 
   function handleApply(preset: (typeof PRESET_TEMPLATES)[number]) {
+    const cc = preset.config.colorConfig as IconColorConfig | undefined;
     const merged: IconConfig = {
       ...DEFAULT_CONFIG,
       ...preset.config,
       source: preset.config.source ?? DEFAULT_CONFIG.source,
-      colorConfig: preset.config.colorConfig as IconColorConfig | undefined,
+      iconColor: cc?.color1 ?? preset.config.iconColor ?? DEFAULT_CONFIG.iconColor,
+      colorConfig: cc,
     };
     onApply(merged);
     setOpen(false);
@@ -71,7 +52,6 @@ export function PresetTemplates({ onApply }: PresetTemplatesProps) {
             const iconClass =
               source && source.type === "icon" ? source.iconClass : "";
             const cc = preset.config.colorConfig;
-            const previewBg = getPreviewBackground(cc);
 
             return (
               <button
@@ -79,42 +59,37 @@ export function PresetTemplates({ onApply }: PresetTemplatesProps) {
                 onClick={() => handleApply(preset)}
                 className="group flex flex-col items-center gap-2 rounded-lg border border-border p-3 transition-all hover:border-primary hover:bg-muted/40 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                {/* Icon with color preview */}
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-xl"
-                  style={{ background: previewBg }}
-                >
+                {/* Icon on transparent bg with the actual color */}
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-muted/30">
                   {iconClass && (
                     <i
                       className={iconClass}
                       style={{
-                        color: "#ffffff",
+                        color: cc?.color1 ?? preset.config.iconColor ?? "#985184",
                         fontSize: "1.75rem",
-                        mixBlendMode: "overlay",
-                        opacity: 0.9,
                       }}
                       aria-hidden="true"
                     />
                   )}
                 </div>
 
-                {/* Color dots */}
-                <div className="flex gap-0.5">
+                {/* Color dots showing the palette */}
+                <div className="flex gap-1">
                   {cc && (
                     <>
                       <div
-                        className="h-2 w-2 rounded-full"
+                        className="h-2.5 w-2.5 rounded-full border border-border/50"
                         style={{ backgroundColor: cc.color1 }}
                       />
                       {(cc.mode === "complementary" || cc.mode === "tricolor") && (
                         <div
-                          className="h-2 w-2 rounded-full"
+                          className="h-2.5 w-2.5 rounded-full border border-border/50"
                           style={{ backgroundColor: cc.color2 }}
                         />
                       )}
                       {cc.mode === "tricolor" && (
                         <div
-                          className="h-2 w-2 rounded-full"
+                          className="h-2.5 w-2.5 rounded-full border border-border/50"
                           style={{ backgroundColor: cc.color3 }}
                         />
                       )}

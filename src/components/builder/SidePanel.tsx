@@ -23,9 +23,10 @@ const DEFAULT_COLOR_CONFIG: IconColorConfig = {
 interface SidePanelProps {
   config: IconConfig;
   onUpdate: (updates: Partial<IconConfig>) => void;
+  onReplace: (config: IconConfig) => void;
 }
 
-export function SidePanel({ config, onUpdate }: SidePanelProps) {
+export function SidePanel({ config, onUpdate, onReplace }: SidePanelProps) {
   const versionDefaults = getVersionConfig(config.odooVersion);
 
   const colorConfig: IconColorConfig = config.colorConfig ?? {
@@ -50,7 +51,7 @@ export function SidePanel({ config, onUpdate }: SidePanelProps) {
 
       {/* Preset templates */}
       <PresetTemplates
-        onApply={(newConfig) => onUpdate(newConfig)}
+        onApply={(newConfig) => onReplace(newConfig)}
       />
 
       <Separator />

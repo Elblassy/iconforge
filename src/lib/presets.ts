@@ -77,7 +77,6 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-graph-up-arrow",
-        unicodeChar: "\uF5E3",
       },
       colorConfig: {
         mode: "tricolor",
@@ -97,7 +96,6 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-box-seam",
-        unicodeChar: "\uF1C1",
       },
       colorConfig: {
         mode: "tricolor",
@@ -117,7 +115,6 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-people",
-        unicodeChar: "\uF4CF",
       },
       colorConfig: {
         mode: "tricolor",
@@ -137,7 +134,6 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-calculator",
-        unicodeChar: "\uF20F",
       },
       colorConfig: {
         mode: "tinted",
@@ -157,7 +153,6 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-person-lines-fill",
-        unicodeChar: "\uF4D4",
       },
       colorConfig: {
         mode: "complementary",
@@ -177,7 +172,6 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-globe",
-        unicodeChar: "\uF38F",
       },
       colorConfig: {
         mode: "tricolor",
@@ -197,7 +191,6 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-gear",
-        unicodeChar: "\uF3E5",
       },
       colorConfig: {
         mode: "complementary",
@@ -217,7 +210,6 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-cart3",
-        unicodeChar: "\uF237",
       },
       colorConfig: {
         mode: "tricolor",
@@ -237,7 +229,6 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-kanban",
-        unicodeChar: "\uF41D",
       },
       colorConfig: {
         mode: "tricolor",
@@ -257,7 +248,6 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-chat-dots",
-        unicodeChar: "\uF252",
       },
       colorConfig: {
         mode: "tinted",
@@ -277,7 +267,6 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-calendar-event",
-        unicodeChar: "\uF1EA",
       },
       colorConfig: {
         mode: "complementary",
@@ -297,7 +286,6 @@ export const PRESET_TEMPLATES: PresetTemplate[] = [
         type: "icon",
         iconSet: "bootstrap-icons",
         iconClass: "bi bi-sliders",
-        unicodeChar: "\uF578",
       },
       colorConfig: {
         mode: "tricolor",
