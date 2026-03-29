@@ -121,22 +121,27 @@ export function SidePanel({ config, onUpdate, onReplace }: SidePanelProps) {
         fontWeight={config.fontWeight}
         onFontSizeChange={(fontSize) => onUpdate({ fontSize })}
         onFontWeightChange={(fontWeight) => onUpdate({ fontWeight })}
+        hideWeight={config.source.type === "image"}
       />
 
-      <Separator />
+      {config.backgroundColor !== "transparent" && (
+        <>
+          <Separator />
 
-      {/* Advanced controls */}
-      <AdvancedControls
-        gradientIntensity={config.gradientIntensity}
-        shadowIntensity={config.shadowIntensity}
-        cornerRadiusOverride={config.cornerRadiusOverride}
-        defaults={{
-          gradientAlpha: versionDefaults.gradientAlpha,
-          innerShadowAlpha: versionDefaults.innerShadowAlpha,
-          cornerRadiusPercent: versionDefaults.cornerRadiusPercent,
-        }}
-        onChange={(updates) => onUpdate(updates)}
-      />
+          {/* Advanced controls — only applicable with a solid background */}
+          <AdvancedControls
+            gradientIntensity={config.gradientIntensity}
+            shadowIntensity={config.shadowIntensity}
+            cornerRadiusOverride={config.cornerRadiusOverride}
+            defaults={{
+              gradientAlpha: versionDefaults.gradientAlpha,
+              innerShadowAlpha: versionDefaults.innerShadowAlpha,
+              cornerRadiusPercent: versionDefaults.cornerRadiusPercent,
+            }}
+            onChange={(updates) => onUpdate(updates)}
+          />
+        </>
+      )}
     </div>
   );
 }

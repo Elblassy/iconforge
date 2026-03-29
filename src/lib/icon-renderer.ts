@@ -423,12 +423,15 @@ export class IconRenderer {
     el.className = iconClass;
     el.style.cssText = "position:absolute;top:-9999px;left:-9999px;visibility:hidden";
     document.body.appendChild(el);
-    const content = window.getComputedStyle(el, "::before").getPropertyValue("content");
-    document.body.removeChild(el);
-    if (content && content !== "none" && content !== '""' && content !== "''") {
-      return content.replace(/^["']|["']$/g, "");
+    try {
+      const content = window.getComputedStyle(el, "::before").getPropertyValue("content");
+      if (content && content !== "none" && content !== '""' && content !== "''") {
+        return content.replace(/^["']|["']$/g, "");
+      }
+      return null;
+    } finally {
+      document.body.removeChild(el);
     }
-    return null;
   }
 
   /**

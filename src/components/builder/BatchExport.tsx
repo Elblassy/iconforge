@@ -80,9 +80,10 @@ export function BatchExport({ config }: BatchExportProps) {
             canvas = renderer.render(renderConfig);
           }
 
-          const blob = await new Promise<Blob>((resolve) =>
-            canvas.toBlob((b) => resolve(b!), "image/png")
+          const blob = await new Promise<Blob | null>((resolve) =>
+            canvas.toBlob((b) => resolve(b), "image/png")
           );
+          if (!blob) continue;
 
           zip.file(`odoo-${version}-${size}px.png`, blob);
         }

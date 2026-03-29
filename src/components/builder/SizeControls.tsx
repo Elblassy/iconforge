@@ -15,6 +15,7 @@ interface SizeControlsProps {
   fontWeight: 300 | 400 | 700 | 900;
   onFontSizeChange: (value: number) => void;
   onFontWeightChange: (value: 300 | 400 | 700 | 900) => void;
+  hideWeight?: boolean;
 }
 
 export function SizeControls({
@@ -22,6 +23,7 @@ export function SizeControls({
   fontWeight,
   onFontSizeChange,
   onFontWeightChange,
+  hideWeight = false,
 }: SizeControlsProps) {
   return (
     <div className="space-y-4">
@@ -47,25 +49,27 @@ export function SizeControls({
       </div>
 
       {/* Font Weight */}
-      <div className="space-y-2">
-        <Label>Font Weight</Label>
-        <Select
-          value={String(fontWeight)}
-          onValueChange={(v) =>
-            onFontWeightChange(Number(v) as 300 | 400 | 700 | 900)
-          }
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="300">300 Light</SelectItem>
-            <SelectItem value="400">400 Regular</SelectItem>
-            <SelectItem value="700">700 Bold</SelectItem>
-            <SelectItem value="900">900 Black</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {!hideWeight && (
+        <div className="space-y-2">
+          <Label>Font Weight</Label>
+          <Select
+            value={String(fontWeight)}
+            onValueChange={(v) =>
+              onFontWeightChange(Number(v) as 300 | 400 | 700 | 900)
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="300">300 Light</SelectItem>
+              <SelectItem value="400">400 Regular</SelectItem>
+              <SelectItem value="700">700 Bold</SelectItem>
+              <SelectItem value="900">900 Black</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   );
 }

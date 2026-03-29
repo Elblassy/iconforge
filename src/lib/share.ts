@@ -15,6 +15,21 @@ export function encodeConfig(config: IconConfig): string {
   return encodeURIComponent(base64);
 }
 
+function isValidConfig(obj: unknown): obj is IconConfig {
+  if (!obj || typeof obj !== "object") return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.odooVersion === "string" &&
+    typeof o.backgroundColor === "string" &&
+    typeof o.iconColor === "string" &&
+    typeof o.iconWidth === "number" &&
+    typeof o.fontSize === "number" &&
+    typeof o.fontWeight === "number" &&
+    o.source !== undefined &&
+    typeof (o.source as Record<string, unknown>).type === "string"
+  );
+}
+
 export function decodeConfig(encoded: string): IconConfig | null {
   try {
     const base64 = decodeURIComponent(encoded);
@@ -22,7 +37,9 @@ export function decodeConfig(encoded: string): IconConfig | null {
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     const json = pako.inflate(bytes, { to: "string" });
-    return JSON.parse(json) as IconConfig;
+    const parsed: unknown = JSON.parse(json);
+    if (!isValidConfig(parsed)) return null;
+    return parsed;
   } catch {
     return null;
   }

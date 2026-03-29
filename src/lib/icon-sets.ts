@@ -42,7 +42,7 @@ const registry: IconSet[] = [
     prefix: "ti",
     fontFamily: "tabler-icons",
     cssUrl:
-      "https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css",
+      "https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/tabler-icons.min.css",
     icons: [],
     loaded: false,
   },
@@ -61,7 +61,7 @@ const registry: IconSet[] = [
     name: "Lucide",
     prefix: "lucide",
     fontFamily: "lucide",
-    cssUrl: "https://unpkg.com/lucide-static@latest/font/lucide.css",
+    cssUrl: "https://unpkg.com/lucide-static@0.468.0/font/lucide.css",
     icons: [],
     loaded: false,
   },

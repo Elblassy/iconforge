@@ -2,7 +2,6 @@
 
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { COLOR_PALETTES } from "@/lib/presets";
 
 interface ColorSectionProps {
   backgroundColor: string;
@@ -71,34 +70,6 @@ export function ColorSection({
             {iconColor.toUpperCase()}
           </span>
         </div>
-      </div>
-
-      {/* Color palettes */}
-      <div className="space-y-3">
-        <Label>Icon Color Palettes</Label>
-        {COLOR_PALETTES.map((palette) => (
-          <div key={palette.name} className="space-y-1.5">
-            <p className="text-xs text-muted-foreground">{palette.name}</p>
-            <div className="flex flex-wrap gap-1.5">
-              {palette.pairs.map((pair) => (
-                <button
-                  key={pair.bg}
-                  type="button"
-                  aria-label={`Apply ${palette.name} icon color ${pair.bg}`}
-                  onClick={() => onIconColorChange(pair.bg)}
-                  className="h-7 w-7 rounded-full border-2 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                  style={{
-                    backgroundColor: pair.bg,
-                    borderColor:
-                      iconColor === pair.bg
-                        ? "hsl(var(--primary))"
-                        : "transparent",
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );

@@ -129,9 +129,10 @@ export function IconCanvas({ config }: IconCanvasProps) {
                   `  <image width="50" height="50" href="${canvasDataUrl}" preserveAspectRatio="xMidYMid meet"/>`,
                   `</svg>`,
                 ].join("\n");
-                const pngBlob = await new Promise<Blob>((resolve) =>
-                  canvas.toBlob((b) => resolve(b!), "image/png")
+                const pngBlob = await new Promise<Blob | null>((resolve) =>
+                  canvas.toBlob((b) => resolve(b), "image/png")
                 );
+                if (!pngBlob) return;
 
                 // Package as ZIP
                 const zip = new JSZip();
