@@ -75,7 +75,10 @@ const loadedCSSUrls = new Set<string>();
 
 export function loadIconSetCSS(setId: string): Promise<void> {
   const set = registry.find((s) => s.id === setId);
-  if (!set) return Promise.reject(new Error(`Unknown icon set: ${setId}`));
+  if (!set) {
+    console.warn(`Unknown icon set: ${setId}`);
+    return Promise.resolve();
+  }
   if (loadedCSSUrls.has(set.cssUrl)) return Promise.resolve();
 
   return new Promise<void>((resolve, reject) => {
@@ -93,7 +96,10 @@ export function loadIconSetCSS(setId: string): Promise<void> {
     link.crossOrigin = "anonymous";
 
     const timer = setTimeout(() => {
-      reject(new Error(`Timed out loading CSS for icon set: ${setId}`));
+      // Timeout: resolve anyway so rendering can proceed (icon may show as fallback)
+      console.warn(`Timed out loading CSS for icon set: ${setId}`);
+      loadedCSSUrls.add(set.cssUrl); // mark as attempted to avoid retrying
+      resolve();
     }, 5000);
 
     link.onload = () => {
@@ -104,7 +110,10 @@ export function loadIconSetCSS(setId: string): Promise<void> {
 
     link.onerror = () => {
       clearTimeout(timer);
-      reject(new Error(`Failed to load CSS for icon set: ${setId}`));
+      // Resolve instead of reject — a failed font shouldn't crash rendering
+      console.warn(`Failed to load CSS for icon set: ${setId}`);
+      loadedCSSUrls.add(set.cssUrl); // mark as attempted
+      resolve();
     };
 
     document.head.appendChild(link);
