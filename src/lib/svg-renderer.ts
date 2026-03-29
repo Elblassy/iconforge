@@ -189,7 +189,7 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
             `  <defs>`,
             `    <linearGradient id="blendGrad" x1="0" y1="0" x2="1" y2="0">${stops}</linearGradient>`,
             `  </defs>`,
-            `  <g transform="translate(${ox.toFixed(2)}, ${oy.toFixed(2)}) scale(${scale.toFixed(4)})">`,
+            `  <g transform="translate(${ox.toFixed(2)}, ${oy.toFixed(2)}) scale(${scale.toFixed(4)})" fill="url(#blendGrad)" stroke="url(#blendGrad)">`,
             `    ${colored}`,
             `  </g>`,
             `</svg>`,
@@ -210,7 +210,7 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
         regions.forEach((r, i) => {
           const colored = recolorContent(innerContent, r.color);
           parts.push(`  <g clip-path="url(#region${i})">`);
-          parts.push(`    <g transform="translate(${ox.toFixed(2)}, ${oy.toFixed(2)}) scale(${scale.toFixed(4)})">`);
+          parts.push(`    <g transform="translate(${ox.toFixed(2)}, ${oy.toFixed(2)}) scale(${scale.toFixed(4)})" fill="${r.color}" stroke="${r.color}">`);
           parts.push(`      ${colored}`);
           parts.push(`    </g>`);
           parts.push(`  </g>`);
