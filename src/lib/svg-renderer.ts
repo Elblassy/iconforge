@@ -152,6 +152,7 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
 
   const cc = config.colorConfig;
   const isTinted = cc?.mode === "tinted";
+  const isBlendGradient = isTinted || (cc?.blend && (cc?.mode === "complementary" || cc?.mode === "tricolor"));
 
   // ── Icon font: fetch real SVG paths ──
   if (source.type === "icon") {
@@ -170,19 +171,23 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
 
         const innerContent = extractInnerContent(svgEl);
 
-        // Tinted: use SVG gradient fill
-        if (isTinted && cc) {
-          const dark = shadeColor(cc.color1, -30);
-          const light = shadeColor(cc.color1, 40);
-          const colored = recolorContent(innerContent, "url(#tintGrad)");
+        // Gradient blend: tinted, or duo/trio with blend ON
+        if (isBlendGradient && cc) {
+          let stops: string;
+          if (isTinted) {
+            const dark = shadeColor(cc.color1, -30);
+            const light = shadeColor(cc.color1, 40);
+            stops = `<stop offset="0" stop-color="${dark}"/><stop offset="0.5" stop-color="${cc.color1}"/><stop offset="1" stop-color="${light}"/>`;
+          } else if (cc.mode === "complementary") {
+            stops = `<stop offset="0" stop-color="${cc.color1}"/><stop offset="1" stop-color="${cc.color2}"/>`;
+          } else {
+            stops = `<stop offset="0" stop-color="${cc.color1}"/><stop offset="0.5" stop-color="${cc.color2}"/><stop offset="1" stop-color="${cc.color3}"/>`;
+          }
+          const colored = recolorContent(innerContent, "url(#blendGrad)");
           return [
             `<svg width="${targetSize}" height="${targetSize}" viewBox="0 0 ${targetSize} ${targetSize}" xmlns="http://www.w3.org/2000/svg">`,
             `  <defs>`,
-            `    <linearGradient id="tintGrad" x1="0" y1="0" x2="1" y2="0">`,
-            `      <stop offset="0" stop-color="${dark}"/>`,
-            `      <stop offset="0.5" stop-color="${cc.color1}"/>`,
-            `      <stop offset="1" stop-color="${light}"/>`,
-            `    </linearGradient>`,
+            `    <linearGradient id="blendGrad" x1="0" y1="0" x2="1" y2="0">${stops}</linearGradient>`,
             `  </defs>`,
             `  <g transform="translate(${ox.toFixed(2)}, ${oy.toFixed(2)}) scale(${scale.toFixed(4)})">`,
             `    ${colored}`,

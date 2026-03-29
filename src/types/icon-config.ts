@@ -31,6 +31,7 @@ export interface IconColorConfig {
   color1: string; // primary color
   color2: string; // secondary color (used in complementary/tricolor)
   color3: string; // tertiary color (used in tricolor)
+  blend: boolean; // smooth gradient blend instead of hard split
 }
 
 export interface IconConfig {

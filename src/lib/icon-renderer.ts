@@ -177,7 +177,22 @@ export class IconRenderer {
       return;
     }
 
-    // Duo / Trio: clip regions
+    // Blend mode: smooth gradient for duo/trio
+    if (cc.blend) {
+      const gradient = ctx.createLinearGradient(0, 0, size, 0);
+      if (mode === "complementary") {
+        gradient.addColorStop(0, cc.color1);
+        gradient.addColorStop(1, cc.color2);
+      } else if (mode === "tricolor") {
+        gradient.addColorStop(0, cc.color1);
+        gradient.addColorStop(0.5, cc.color2);
+        gradient.addColorStop(1, cc.color3);
+      }
+      this._drawTextWithFill(ctx, config, size, gradient);
+      return;
+    }
+
+    // Hard split: clip regions
     const regions = this._getColorRegions(cc, size);
 
     for (const region of regions) {

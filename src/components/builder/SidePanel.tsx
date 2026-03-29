@@ -17,6 +17,7 @@ const DEFAULT_COLOR_CONFIG: IconColorConfig = {
   color1: "#985184",
   color2: "#F86126",
   color3: "#FBB945",
+  blend: false,
 };
 
 interface SidePanelProps {

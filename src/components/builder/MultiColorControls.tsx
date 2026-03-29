@@ -103,6 +103,22 @@ export function MultiColorControls({
             </span>
           </div>
         )}
+
+        {/* Blend toggle for duo/trio */}
+        {(mode === "complementary" || mode === "tricolor") && (
+          <button
+            type="button"
+            onClick={() => onChange({ ...colorConfig, blend: !colorConfig.blend })}
+            className={`flex w-full items-center justify-between rounded-md border px-3 py-1.5 text-xs transition-colors ${
+              colorConfig.blend
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-muted-foreground"
+            }`}
+          >
+            <span>Smooth Blend</span>
+            <span>{colorConfig.blend ? "ON" : "OFF"}</span>
+          </button>
+        )}
       </div>
 
       {/* Preview showing the actual layers */}
@@ -113,24 +129,30 @@ export function MultiColorControls({
             <div className="h-full flex-1" style={{ backgroundColor: color1 }} />
           )}
           {mode === "tinted" && (
-            <>
-              <div className="h-full flex-1" style={{ backgroundColor: tintDark }} />
-              <div className="h-full flex-1" style={{ backgroundColor: color1 }} />
-              <div className="h-full flex-1" style={{ backgroundColor: tintLight }} />
-            </>
+            <div
+              className="h-full flex-1"
+              style={{ background: `linear-gradient(90deg, ${tintDark}, ${color1}, ${tintLight})` }}
+            />
           )}
           {mode === "complementary" && (
-            <>
-              <div className="h-full flex-1" style={{ backgroundColor: color1 }} />
-              <div className="h-full flex-1" style={{ backgroundColor: color2 }} />
-            </>
+            <div
+              className="h-full flex-1"
+              style={{
+                background: colorConfig.blend
+                  ? `linear-gradient(90deg, ${color1}, ${color2})`
+                  : `linear-gradient(90deg, ${color1} 50%, ${color2} 50%)`,
+              }}
+            />
           )}
           {mode === "tricolor" && (
-            <>
-              <div className="h-full flex-1" style={{ backgroundColor: color1 }} />
-              <div className="h-full flex-1" style={{ backgroundColor: color2 }} />
-              <div className="h-full flex-1" style={{ backgroundColor: color3 }} />
-            </>
+            <div
+              className="h-full flex-1"
+              style={{
+                background: colorConfig.blend
+                  ? `linear-gradient(90deg, ${color1}, ${color2}, ${color3})`
+                  : `linear-gradient(90deg, ${color1} 33.3%, ${color2} 33.3%, ${color2} 66.6%, ${color3} 66.6%)`,
+              }}
+            />
           )}
         </div>
       </div>
@@ -149,6 +171,7 @@ export function MultiColorControls({
                   color1: p.colors[0],
                   color2: p.colors[1],
                   color3: p.colors[2],
+                  blend: colorConfig.blend,
                 })
               }
               className="group flex flex-col items-center gap-1 rounded-md border border-border p-1.5 transition-colors hover:border-primary"
