@@ -30,8 +30,8 @@ function getIconSvgUrls(iconSet: string, iconClass: string): string[] {
   if (iconSet === "tabler-icons") {
     const name = parts.find((p) => p.startsWith("ti-") && p !== "ti")?.replace("ti-", "");
     if (name) {
-      urls.push(`https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/outline/${name}.svg`);
-      urls.push(`https://cdn.jsdelivr.net/npm/@tabler/icons@3.19.0/icons/filled/${name}.svg`);
+      urls.push(`https://cdn.jsdelivr.net/npm/@tabler/icons@3.41.0/icons/outline/${name}.svg`);
+      urls.push(`https://cdn.jsdelivr.net/npm/@tabler/icons@3.41.0/icons/filled/${name}.svg`);
     }
   }
   return urls;

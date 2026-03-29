@@ -42,7 +42,7 @@ const registry: IconSet[] = [
     prefix: "ti",
     fontFamily: "tabler-icons",
     cssUrl:
-      "https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/tabler-icons.min.css",
+      "https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.41.0/dist/tabler-icons.min.css",
     icons: [],
     loaded: false,
   },
