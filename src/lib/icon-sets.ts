@@ -59,7 +59,7 @@ const registry: IconSet[] = [
   {
     id: "lucide",
     name: "Lucide",
-    prefix: "lucide",
+    prefix: "icon",
     fontFamily: "lucide",
     cssUrl: "https://unpkg.com/lucide-static@0.468.0/font/lucide.css",
     icons: [],
@@ -225,7 +225,7 @@ export async function loadIconSetMetadata(setId: string): Promise<IconMeta[]> {
             } else if (setId === "tabler") {
               iconClass = `ti ti-${name}`;
             } else if (setId === "lucide") {
-              iconClass = `lucide lucide-${name}`;
+              iconClass = `icon-${name}`;
             }
           }
         }
@@ -331,7 +331,7 @@ async function domFallback(set: IconSet): Promise<IconMeta[]> {
         } else if (set.id === "tabler") {
           el.className = `ti ti-${name}`;
         } else if (set.id === "lucide") {
-          el.className = `lucide lucide-${name}`;
+          el.className = `icon-${name}`;
         } else {
           el.className = `${set.prefix}-${name}`;
         }
@@ -473,28 +473,28 @@ function getHardcodedFallback(set: IconSet): IconMeta[] {
       { name: "eye", class: "ti ti-eye", unicode: "\uEA70" },
     ],
     lucide: [
-      { name: "home", class: "lucide lucide-home", unicode: "\uE000" },
-      { name: "star", class: "lucide lucide-star", unicode: "\uE001" },
-      { name: "heart", class: "lucide lucide-heart", unicode: "\uE002" },
-      { name: "user", class: "lucide lucide-user", unicode: "\uE003" },
-      { name: "settings", class: "lucide lucide-settings", unicode: "\uE004" },
-      { name: "search", class: "lucide lucide-search", unicode: "\uE005" },
-      { name: "mail", class: "lucide lucide-mail", unicode: "\uE006" },
-      { name: "calendar", class: "lucide lucide-calendar", unicode: "\uE007" },
-      { name: "file", class: "lucide lucide-file", unicode: "\uE008" },
-      { name: "folder", class: "lucide lucide-folder", unicode: "\uE009" },
-      { name: "trash", class: "lucide lucide-trash", unicode: "\uE00A" },
-      { name: "pencil", class: "lucide lucide-pencil", unicode: "\uE00B" },
-      { name: "check", class: "lucide lucide-check", unicode: "\uE00C" },
-      { name: "x", class: "lucide lucide-x", unicode: "\uE00D" },
-      { name: "plus", class: "lucide lucide-plus", unicode: "\uE00E" },
-      { name: "minus", class: "lucide lucide-minus", unicode: "\uE00F" },
-      { name: "bell", class: "lucide lucide-bell", unicode: "\uE010" },
-      { name: "message-square", class: "lucide lucide-message-square", unicode: "\uE011" },
-      { name: "download", class: "lucide lucide-download", unicode: "\uE012" },
-      { name: "upload", class: "lucide lucide-upload", unicode: "\uE013" },
-      { name: "lock", class: "lucide lucide-lock", unicode: "\uE014" },
-      { name: "eye", class: "lucide lucide-eye", unicode: "\uE015" },
+      { name: "home", class: "icon-home", unicode: "\uE000" },
+      { name: "star", class: "icon-star", unicode: "\uE001" },
+      { name: "heart", class: "icon-heart", unicode: "\uE002" },
+      { name: "user", class: "icon-user", unicode: "\uE003" },
+      { name: "settings", class: "icon-settings", unicode: "\uE004" },
+      { name: "search", class: "icon-search", unicode: "\uE005" },
+      { name: "mail", class: "icon-mail", unicode: "\uE006" },
+      { name: "calendar", class: "icon-calendar", unicode: "\uE007" },
+      { name: "file", class: "icon-file", unicode: "\uE008" },
+      { name: "folder", class: "icon-folder", unicode: "\uE009" },
+      { name: "trash", class: "icon-trash", unicode: "\uE00A" },
+      { name: "pencil", class: "icon-pencil", unicode: "\uE00B" },
+      { name: "check", class: "icon-check", unicode: "\uE00C" },
+      { name: "x", class: "icon-x", unicode: "\uE00D" },
+      { name: "plus", class: "icon-plus", unicode: "\uE00E" },
+      { name: "minus", class: "icon-minus", unicode: "\uE00F" },
+      { name: "bell", class: "icon-bell", unicode: "\uE010" },
+      { name: "message-square", class: "icon-message-square", unicode: "\uE011" },
+      { name: "download", class: "icon-download", unicode: "\uE012" },
+      { name: "upload", class: "icon-upload", unicode: "\uE013" },
+      { name: "lock", class: "icon-lock", unicode: "\uE014" },
+      { name: "eye", class: "icon-eye", unicode: "\uE015" },
     ],
   };
 
