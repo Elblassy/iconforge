@@ -93,25 +93,30 @@ function getColorRegionsSvg(
   if (cc.mode === "tinted") {
     const dark = shadeColor(cc.color1, -30);
     const light = shadeColor(cc.color1, 40);
+    const t = (s / 3).toFixed(2);
+    const t2 = (s * 2 / 3).toFixed(2);
     return [
-      { color: dark, clipPoints: `0,0 ${s},0 ${s * 0.33},${s} 0,${s}` },
-      { color: cc.color1, clipPoints: `${s * 0.33},${s} ${s},0 ${s},${s * 0.33} ${s * 0.67},${s}` },
-      { color: light, clipPoints: `${s * 0.67},${s} ${s},${s * 0.33} ${s},${s}` },
+      { color: dark, clipPoints: `0,0 ${t},0 ${t},${s} 0,${s}` },
+      { color: cc.color1, clipPoints: `${t},0 ${t2},0 ${t2},${s} ${t},${s}` },
+      { color: light, clipPoints: `${t2},0 ${s},0 ${s},${s} ${t2},${s}` },
     ];
   }
 
   if (cc.mode === "complementary") {
+    const half = (s / 2).toFixed(2);
     return [
-      { color: cc.color1, clipPoints: `0,0 ${s},0 ${s * 0.5},${s} 0,${s}` },
-      { color: cc.color2, clipPoints: `${s},0 ${s},${s} 0,${s} ${s * 0.5},${s}` },
+      { color: cc.color1, clipPoints: `0,0 ${half},0 ${half},${s} 0,${s}` },
+      { color: cc.color2, clipPoints: `${half},0 ${s},0 ${s},${s} ${half},${s}` },
     ];
   }
 
   if (cc.mode === "tricolor") {
+    const t = (s / 3).toFixed(2);
+    const t2 = (s * 2 / 3).toFixed(2);
     return [
-      { color: cc.color1, clipPoints: `0,0 ${s},0 ${s * 0.33},${s} 0,${s}` },
-      { color: cc.color2, clipPoints: `${s * 0.33},${s} ${s},0 ${s},${s * 0.33} ${s * 0.67},${s}` },
-      { color: cc.color3, clipPoints: `${s * 0.67},${s} ${s},${s * 0.33} ${s},${s}` },
+      { color: cc.color1, clipPoints: `0,0 ${t},0 ${t},${s} 0,${s}` },
+      { color: cc.color2, clipPoints: `${t},0 ${t2},0 ${t2},${s} ${t},${s}` },
+      { color: cc.color3, clipPoints: `${t2},0 ${s},0 ${s},${s} ${t2},${s}` },
     ];
   }
 
