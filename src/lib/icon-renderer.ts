@@ -325,24 +325,34 @@ export class IconRenderer {
     let gradient: CanvasGradient;
 
     const m = (cc.midpoint ?? 50) / 100; // 0-1
+    // Blend zone is 20% of the total, centered on the midpoint
+    const blend = 0.1;
+    const s1 = Math.max(0, m - blend); // end of solid color1
+    const s2 = Math.min(1, m + blend); // start of solid color2
 
     switch (cc.mode) {
       case "gradient-diagonal":
         gradient = ctx.createLinearGradient(0, size, size, 0);
         gradient.addColorStop(0, cc.color1);
-        gradient.addColorStop(m, cc.color2);
+        gradient.addColorStop(s1, cc.color1);
+        gradient.addColorStop(s2, cc.color2);
+        gradient.addColorStop(1, cc.color2);
         return gradient;
 
       case "gradient-horizontal":
         gradient = ctx.createLinearGradient(0, 0, size, 0);
         gradient.addColorStop(0, cc.color1);
-        gradient.addColorStop(m, cc.color2);
+        gradient.addColorStop(s1, cc.color1);
+        gradient.addColorStop(s2, cc.color2);
+        gradient.addColorStop(1, cc.color2);
         return gradient;
 
       case "gradient-vertical":
         gradient = ctx.createLinearGradient(0, 0, 0, size);
         gradient.addColorStop(0, cc.color1);
-        gradient.addColorStop(m, cc.color2);
+        gradient.addColorStop(s1, cc.color1);
+        gradient.addColorStop(s2, cc.color2);
+        gradient.addColorStop(1, cc.color2);
         return gradient;
 
       case "gradient-radial":
@@ -351,7 +361,9 @@ export class IconRenderer {
           size / 2, size / 2, size / 2
         );
         gradient.addColorStop(0, cc.color1);
-        gradient.addColorStop(m, cc.color2);
+        gradient.addColorStop(s1, cc.color1);
+        gradient.addColorStop(s2, cc.color2);
+        gradient.addColorStop(1, cc.color2);
         return gradient;
 
       case "split-horizontal":

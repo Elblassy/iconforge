@@ -224,21 +224,24 @@ function ColorPreviewSwatch({
   let bg: string;
   const m = midpoint;
 
+  const s1 = Math.max(0, m - 10);
+  const s2 = Math.min(100, m + 10);
+
   switch (mode) {
     case "solid":
       bg = color1;
       break;
     case "gradient-diagonal":
-      bg = `linear-gradient(135deg, ${color1} 0%, ${color2} ${m}%)`;
+      bg = `linear-gradient(135deg, ${color1} ${s1}%, ${color2} ${s2}%)`;
       break;
     case "gradient-horizontal":
-      bg = `linear-gradient(90deg, ${color1} 0%, ${color2} ${m}%)`;
+      bg = `linear-gradient(90deg, ${color1} ${s1}%, ${color2} ${s2}%)`;
       break;
     case "gradient-vertical":
-      bg = `linear-gradient(180deg, ${color1} 0%, ${color2} ${m}%)`;
+      bg = `linear-gradient(180deg, ${color1} ${s1}%, ${color2} ${s2}%)`;
       break;
     case "gradient-radial":
-      bg = `radial-gradient(circle, ${color1} 0%, ${color2} ${m}%)`;
+      bg = `radial-gradient(circle, ${color1} ${s1}%, ${color2} ${s2}%)`;
       break;
     case "split-horizontal":
       bg = `linear-gradient(90deg, ${color1} ${m}%, ${color2} ${m}%)`;

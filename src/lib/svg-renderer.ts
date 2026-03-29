@@ -63,15 +63,18 @@ function buildSvgColorDefs(cc: IconColorConfig | undefined, iconColor: string): 
   const id = "iconFill";
   const c1 = escapeXml(cc.color1);
   const c2 = escapeXml(cc.color2);
-  const m = ((cc.midpoint ?? 50) / 100).toFixed(3);
+  const m = (cc.midpoint ?? 50) / 100;
+  const blend = 0.1;
+  const s1 = Math.max(0, m - blend).toFixed(3);
+  const s2 = Math.min(1, m + blend).toFixed(3);
 
   function gradStops() {
-    return `<stop offset="0" stop-color="${c1}"/><stop offset="${m}" stop-color="${c2}"/>`;
+    return `<stop offset="0" stop-color="${c1}"/><stop offset="${s1}" stop-color="${c1}"/><stop offset="${s2}" stop-color="${c2}"/><stop offset="1" stop-color="${c2}"/>`;
   }
 
   function splitStops() {
-    const mLo = (parseFloat(m) - 0.001).toFixed(3);
-    const mHi = (parseFloat(m) + 0.001).toFixed(3);
+    const mLo = (m - 0.001).toFixed(3);
+    const mHi = (m + 0.001).toFixed(3);
     return `<stop offset="${mLo}" stop-color="${c1}"/><stop offset="${mHi}" stop-color="${c2}"/>`;
   }
 
