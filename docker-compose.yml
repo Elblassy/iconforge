@@ -1,0 +1,11 @@
+services:
+  odoo-icon-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: odoo-icon-builder
+    ports:
+      - "3080:80"
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"

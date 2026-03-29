@@ -12,8 +12,18 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Odoo Icon Builder",
-  description: "Build and export Odoo module icons with custom styles",
+  title: "IconForge — Odoo Icon Builder",
+  description:
+    "Create beautiful Odoo module icons with multi-color styles, SVG & PNG export. Supports Odoo 16-19. Free and open source by elblasy.app",
+  icons: {
+    icon: "/favicon.svg",
+  },
+  openGraph: {
+    title: "IconForge — Odoo Icon Builder",
+    description:
+      "Create beautiful Odoo module icons with multi-color styles. Free tool by elblasy.app",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
