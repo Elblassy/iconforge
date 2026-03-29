@@ -76,6 +76,35 @@ function recolorContent(content: string, color: string): string {
 }
 
 /**
+ * Detect if an SVG is stroke-based (outline icons like Tabler)
+ * vs fill-based (solid icons like Bootstrap, Font Awesome).
+ * Stroke-based icons have paths with no fill (or fill="none") and rely on stroke.
+ */
+function isStrokeBasedSvg(svgEl: SVGSVGElement): boolean {
+  const paths = svgEl.querySelectorAll("path, circle, rect, polygon, polyline, line, ellipse");
+  let strokeCount = 0;
+  let fillCount = 0;
+  paths.forEach((el) => {
+    const fill = el.getAttribute("fill");
+    const stroke = el.getAttribute("stroke");
+    if (fill === "none" || (!fill && stroke !== "none")) strokeCount++;
+    if (fill && fill !== "none") fillCount++;
+  });
+  // If most visible paths use stroke rather than fill, it's stroke-based
+  return strokeCount > fillCount;
+}
+
+/**
+ * Get the appropriate fill/stroke attributes for a <g> wrapper based on icon type.
+ */
+function getGColorAttrs(color: string, isOutline: boolean): string {
+  if (isOutline) {
+    return `fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
+  }
+  return `fill="${color}" stroke="${color}"`;
+}
+
+/**
  * Get clip-region color definitions for multi-color SVG output.
  * Returns SVG clipPath defs and colored groups.
  */
@@ -170,6 +199,7 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
         const oy = padding + (innerSize - vbH * scale) / 2 - vbY * scale;
 
         const innerContent = extractInnerContent(svgEl);
+        const isOutline = isStrokeBasedSvg(svgEl);
 
         // Gradient blend: tinted, or duo/trio with blend ON
         if (isBlendGradient && cc) {
@@ -184,12 +214,15 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
             stops = `<stop offset="0" stop-color="${cc.color1}"/><stop offset="0.5" stop-color="${cc.color2}"/><stop offset="1" stop-color="${cc.color3}"/>`;
           }
           const colored = recolorContent(innerContent, "url(#blendGrad)");
+          const gAttrs = isOutline
+            ? `fill="none" stroke="url(#blendGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`
+            : `fill="url(#blendGrad)" stroke="url(#blendGrad)"`;
           return [
             `<svg width="${targetSize}" height="${targetSize}" viewBox="0 0 ${targetSize} ${targetSize}" xmlns="http://www.w3.org/2000/svg">`,
             `  <defs>`,
             `    <linearGradient id="blendGrad" x1="0" y1="0" x2="1" y2="0">${stops}</linearGradient>`,
             `  </defs>`,
-            `  <g transform="translate(${ox.toFixed(2)}, ${oy.toFixed(2)}) scale(${scale.toFixed(4)})" fill="url(#blendGrad)" stroke="url(#blendGrad)">`,
+            `  <g transform="translate(${ox.toFixed(2)}, ${oy.toFixed(2)}) scale(${scale.toFixed(4)})" ${gAttrs}>`,
             `    ${colored}`,
             `  </g>`,
             `</svg>`,
@@ -209,8 +242,9 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
 
         regions.forEach((r, i) => {
           const colored = recolorContent(innerContent, r.color);
+          const gAttrs = getGColorAttrs(r.color, isOutline);
           parts.push(`  <g clip-path="url(#region${i})">`);
-          parts.push(`    <g transform="translate(${ox.toFixed(2)}, ${oy.toFixed(2)}) scale(${scale.toFixed(4)})" fill="${r.color}" stroke="${r.color}">`);
+          parts.push(`    <g transform="translate(${ox.toFixed(2)}, ${oy.toFixed(2)}) scale(${scale.toFixed(4)})" ${gAttrs}>`);
           parts.push(`      ${colored}`);
           parts.push(`    </g>`);
           parts.push(`  </g>`);
