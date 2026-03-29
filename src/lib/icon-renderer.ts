@@ -138,11 +138,12 @@ export class IconRenderer {
   }
 
   /**
-   * Draw the icon with Odoo-style layered colors.
+   * Draw the icon with color regions.
    * - solid: single color
-   * - tinted: auto-generated dark/light + main color, offset layers
-   * - complementary: 2 colors, offset layers
-   * - tricolor: 3 colors, offset layers (like Odoo Sale/HR/Stock)
+   * - tinted: auto dark/main/light diagonal bands
+   * - complementary: left-right split, two colors
+   * - tricolor: three diagonal bands
+   * Each mode clips the icon to a region and fills with a different color.
    */
   drawIconWithShadow(
     ctx: CanvasRenderingContext2D,
@@ -154,7 +155,6 @@ export class IconRenderer {
     const mode = cc?.mode ?? "solid";
 
     if (mode === "solid" || !cc) {
-      // Simple single-color draw with drop shadow
       ctx.save();
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = size * versionConfig.dropShadowOffsetPercent;
@@ -165,52 +165,64 @@ export class IconRenderer {
       return;
     }
 
-    // Multi-color: draw offset layers
-    const layers = this._getColorLayers(cc, size);
-    for (const layer of layers) {
+    // Get color regions: each has a clip region and color
+    const regions = this._getColorRegions(cc, size);
+
+    for (const region of regions) {
       ctx.save();
-      ctx.globalAlpha = layer.opacity;
-      this.drawText(ctx, config, size / 2 + layer.offsetX, size / 2 + layer.offsetY, layer.color);
+      // Clip to this region's area
+      ctx.beginPath();
+      ctx.moveTo(region.clip[0], region.clip[1]);
+      for (let i = 2; i < region.clip.length; i += 2) {
+        ctx.lineTo(region.clip[i], region.clip[i + 1]);
+      }
+      ctx.closePath();
+      ctx.clip();
+      // Draw the full icon in this color — only the clipped part shows
+      this.drawText(ctx, config, size / 2, size / 2, region.color);
       ctx.restore();
     }
   }
 
   /**
-   * Get the color layers for multi-color rendering.
-   * Each layer has a color, offset, and opacity — creating the Odoo overlapping effect.
+   * Define clip regions for multi-color modes.
+   * Each region is a polygon (array of x,y pairs) and a color.
    */
-  private _getColorLayers(
+  private _getColorRegions(
     cc: IconColorConfig,
     size: number
-  ): { color: string; offsetX: number; offsetY: number; opacity: number }[] {
-    const shift = size * 0.08; // how much each layer offsets
+  ): { clip: number[]; color: string }[] {
+    const s = size;
 
     if (cc.mode === "tinted") {
       const dark = shadeColor(cc.color1, -30);
       const light = shadeColor(cc.color1, 40);
+      // Three diagonal bands: top-left dark, center main, bottom-right light
       return [
-        { color: light, offsetX: shift, offsetY: shift, opacity: 0.7 },
-        { color: dark, offsetX: -shift * 0.5, offsetY: -shift * 0.5, opacity: 0.8 },
-        { color: cc.color1, offsetX: 0, offsetY: 0, opacity: 1 },
+        { clip: [0, 0, s * 0.45, 0, 0, s * 0.45], color: dark },
+        { clip: [s * 0.45, 0, s, 0, s, s * 0.55, s * 0.55, s, 0, s, 0, s * 0.45], color: cc.color1 },
+        { clip: [s, s * 0.55, s, s, s * 0.55, s], color: light },
       ];
     }
 
     if (cc.mode === "complementary") {
+      // Diagonal split: top-left = color1, bottom-right = color2
       return [
-        { color: cc.color2, offsetX: shift, offsetY: shift * 0.8, opacity: 0.75 },
-        { color: cc.color1, offsetX: -shift * 0.3, offsetY: -shift * 0.3, opacity: 1 },
+        { clip: [0, 0, s, 0, 0, s], color: cc.color1 },
+        { clip: [s, 0, s, s, 0, s], color: cc.color2 },
       ];
     }
 
     if (cc.mode === "tricolor") {
+      // Three diagonal bands
       return [
-        { color: cc.color3, offsetX: shift * 1.2, offsetY: shift, opacity: 0.65 },
-        { color: cc.color2, offsetX: shift * 0.3, offsetY: shift * 0.4, opacity: 0.8 },
-        { color: cc.color1, offsetX: -shift * 0.4, offsetY: -shift * 0.3, opacity: 1 },
+        { clip: [0, 0, s * 0.4, 0, 0, s * 0.4], color: cc.color1 },
+        { clip: [s * 0.4, 0, s, 0, s, s * 0.6, s * 0.6, s, 0, s, 0, s * 0.4], color: cc.color2 },
+        { clip: [s, s * 0.6, s, s, s * 0.6, s], color: cc.color3 },
       ];
     }
 
-    return [{ color: cc.color1, offsetX: 0, offsetY: 0, opacity: 1 }];
+    return [{ clip: [0, 0, s, 0, s, s, 0, s], color: cc.color1 }];
   }
 
   /**

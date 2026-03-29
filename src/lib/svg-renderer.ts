@@ -76,41 +76,46 @@ function recolorContent(content: string, color: string): string {
 }
 
 /**
- * Get color layers for multi-color SVG output.
+ * Get clip-region color definitions for multi-color SVG output.
+ * Returns SVG clipPath defs and colored groups.
  */
-function getColorLayers(cc: IconColorConfig | undefined, iconColor: string): { color: string; offsetPercent: number; opacity: number }[] {
+function getColorRegionsSvg(
+  cc: IconColorConfig | undefined,
+  iconColor: string,
+  size: number
+): { color: string; clipPoints: string }[] {
   if (!cc || cc.mode === "solid") {
-    return [{ color: iconColor, offsetPercent: 0, opacity: 1 }];
+    return [{ color: iconColor, clipPoints: `0,0 ${size},0 ${size},${size} 0,${size}` }];
   }
 
-  const shift = 8; // percentage offset
+  const s = size;
 
   if (cc.mode === "tinted") {
     const dark = shadeColor(cc.color1, -30);
     const light = shadeColor(cc.color1, 40);
     return [
-      { color: light, offsetPercent: shift, opacity: 0.7 },
-      { color: dark, offsetPercent: -shift * 0.5, opacity: 0.8 },
-      { color: cc.color1, offsetPercent: 0, opacity: 1 },
+      { color: dark, clipPoints: `0,0 ${s * 0.45},0 0,${s * 0.45}` },
+      { color: cc.color1, clipPoints: `${s * 0.45},0 ${s},0 ${s},${s * 0.55} ${s * 0.55},${s} 0,${s} 0,${s * 0.45}` },
+      { color: light, clipPoints: `${s},${s * 0.55} ${s},${s} ${s * 0.55},${s}` },
     ];
   }
 
   if (cc.mode === "complementary") {
     return [
-      { color: cc.color2, offsetPercent: shift, opacity: 0.75 },
-      { color: cc.color1, offsetPercent: -shift * 0.3, opacity: 1 },
+      { color: cc.color1, clipPoints: `0,0 ${s},0 0,${s}` },
+      { color: cc.color2, clipPoints: `${s},0 ${s},${s} 0,${s}` },
     ];
   }
 
   if (cc.mode === "tricolor") {
     return [
-      { color: cc.color3, offsetPercent: shift * 1.2, opacity: 0.65 },
-      { color: cc.color2, offsetPercent: shift * 0.3, opacity: 0.8 },
-      { color: cc.color1, offsetPercent: -shift * 0.4, opacity: 1 },
+      { color: cc.color1, clipPoints: `0,0 ${s * 0.4},0 0,${s * 0.4}` },
+      { color: cc.color2, clipPoints: `${s * 0.4},0 ${s},0 ${s},${s * 0.6} ${s * 0.6},${s} 0,${s} 0,${s * 0.4}` },
+      { color: cc.color3, clipPoints: `${s},${s * 0.6} ${s},${s} ${s * 0.6},${s}` },
     ];
   }
 
-  return [{ color: iconColor, offsetPercent: 0, opacity: 1 }];
+  return [{ color: iconColor, clipPoints: `0,0 ${s},0 ${s},${s} 0,${s}` }];
 }
 
 // ─── Public API ─────────────────────────────────────────────────────────────
@@ -144,7 +149,8 @@ export function renderSvg(config: IconConfig, canvasDataUrl?: string): string {
  */
 export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
   const source = config.source;
-  const layers = getColorLayers(config.colorConfig, config.iconColor);
+  const targetSize = 50;
+  const regions = getColorRegionsSvg(config.colorConfig, config.iconColor, targetSize);
 
   // ── Icon font: fetch real SVG paths ──
   if (source.type === "icon") {
@@ -155,28 +161,33 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
         const vb = svgEl.getAttribute("viewBox") || "0 0 16 16";
         const [vbX, vbY, vbW, vbH] = vb.split(" ").map(Number);
 
-        const targetSize = 50;
         const padding = targetSize * 0.05;
         const innerSize = targetSize - padding * 2;
         const scale = innerSize / Math.max(vbW, vbH);
-        const baseOffsetX = padding + (innerSize - vbW * scale) / 2 - vbX * scale;
-        const baseOffsetY = padding + (innerSize - vbH * scale) / 2 - vbY * scale;
+        const ox = padding + (innerSize - vbW * scale) / 2 - vbX * scale;
+        const oy = padding + (innerSize - vbH * scale) / 2 - vbY * scale;
 
         const innerContent = extractInnerContent(svgEl);
-
         const parts: string[] = [
           `<svg width="${targetSize}" height="${targetSize}" viewBox="0 0 ${targetSize} ${targetSize}" xmlns="http://www.w3.org/2000/svg">`,
+          `  <defs>`,
         ];
 
-        for (const layer of layers) {
-          const px = (layer.offsetPercent / 100) * targetSize;
-          const ox = (baseOffsetX + px).toFixed(2);
-          const oy = (baseOffsetY + px * 0.8).toFixed(2);
-          const colored = recolorContent(innerContent, layer.color);
-          parts.push(`  <g transform="translate(${ox}, ${oy}) scale(${scale.toFixed(4)})" opacity="${layer.opacity}">`);
-          parts.push(`    ${colored}`);
+        // Define clip paths for each color region
+        regions.forEach((r, i) => {
+          parts.push(`    <clipPath id="region${i}"><polygon points="${r.clipPoints}"/></clipPath>`);
+        });
+        parts.push(`  </defs>`);
+
+        // Draw the icon once per region, clipped to that region's area
+        regions.forEach((r, i) => {
+          const colored = recolorContent(innerContent, r.color);
+          parts.push(`  <g clip-path="url(#region${i})">`);
+          parts.push(`    <g transform="translate(${ox.toFixed(2)}, ${oy.toFixed(2)}) scale(${scale.toFixed(4)})">`);
+          parts.push(`      ${colored}`);
+          parts.push(`    </g>`);
           parts.push(`  </g>`);
-        }
+        });
 
         parts.push(`</svg>`);
         return parts.join("\n");
@@ -185,7 +196,7 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
     console.warn("Odoo 17+ SVG: no SVG found for", source.iconClass);
   }
 
-  // ── Text/image/fallback: render via canvas ──
+  // ── Image: embed directly ──
   if (source.type === "image" && source.imageDataUrl) {
     return [
       `<svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">`,
@@ -194,43 +205,41 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
     ].join("\n");
   }
 
-  // Canvas render for text or icon fallback (includes multi-color layers)
+  // ── Text / icon fallback: render via canvas with clip regions ──
   const renderSize = 256;
   const canvas = document.createElement("canvas");
   canvas.width = renderSize;
   canvas.height = renderSize;
   const ctx = canvas.getContext("2d")!;
   const scaledFontSize = Math.round(renderSize * (config.fontSize / config.iconWidth));
+  const canvasRegions = getColorRegionsSvg(config.colorConfig, config.iconColor, renderSize);
 
-  if (source.type === "text") {
+  const drawGlyph = (color: string) => {
+    ctx.fillStyle = color;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.font = `${config.fontWeight} ${scaledFontSize}px "${source.fontFamily}"`;
+    if (source.type === "text") {
+      ctx.font = `${config.fontWeight} ${scaledFontSize}px "${source.fontFamily}"`;
+      ctx.fillText(source.text, renderSize / 2, renderSize / 2);
+    } else if (source.type === "icon") {
+      ctx.font = `${config.fontWeight} ${scaledFontSize}px "${source.iconSet}"`;
+      const renderer = new IconRenderer();
+      const glyph = source.unicodeChar || renderer["_resolveIconUnicode"](source.iconClass);
+      if (glyph) ctx.fillText(glyph, renderSize / 2, renderSize / 2);
+    }
+  };
 
-    for (const layer of layers) {
-      ctx.save();
-      ctx.globalAlpha = layer.opacity;
-      ctx.fillStyle = layer.color;
-      const px = (layer.offsetPercent / 100) * renderSize;
-      ctx.fillText(source.text, renderSize / 2 + px, renderSize / 2 + px * 0.8);
-      ctx.restore();
-    }
-  } else if (source.type === "icon") {
-    const renderer = new IconRenderer();
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = `${config.fontWeight} ${scaledFontSize}px "${source.iconSet}"`;
-    const glyph = source.unicodeChar || renderer["_resolveIconUnicode"](source.iconClass);
-    if (glyph) {
-      for (const layer of layers) {
-        ctx.save();
-        ctx.globalAlpha = layer.opacity;
-        ctx.fillStyle = layer.color;
-        const px = (layer.offsetPercent / 100) * renderSize;
-        ctx.fillText(glyph, renderSize / 2 + px, renderSize / 2 + px * 0.8);
-        ctx.restore();
-      }
-    }
+  for (const region of canvasRegions) {
+    ctx.save();
+    // Parse clip points and create canvas clip path
+    const pts = region.clipPoints.split(" ").map((p) => p.split(",").map(Number));
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.closePath();
+    ctx.clip();
+    drawGlyph(region.color);
+    ctx.restore();
   }
 
   const dataUrl = canvas.toDataURL("image/png");
