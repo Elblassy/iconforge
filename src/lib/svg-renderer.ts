@@ -91,15 +91,8 @@ function getColorRegionsSvg(
   const s = size;
 
   if (cc.mode === "tinted") {
-    const dark = shadeColor(cc.color1, -30);
-    const light = shadeColor(cc.color1, 40);
-    const t = (s / 3).toFixed(2);
-    const t2 = (s * 2 / 3).toFixed(2);
-    return [
-      { color: dark, clipPoints: `0,0 ${t},0 ${t},${s} 0,${s}` },
-      { color: cc.color1, clipPoints: `${t},0 ${t2},0 ${t2},${s} ${t},${s}` },
-      { color: light, clipPoints: `${t2},0 ${s},0 ${s},${s} ${t2},${s}` },
-    ];
+    // Tinted uses SVG gradient — handled separately in renderOdoo17Svg
+    return [];
   }
 
   if (cc.mode === "complementary") {
@@ -157,6 +150,9 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
   const targetSize = 50;
   const regions = getColorRegionsSvg(config.colorConfig, config.iconColor, targetSize);
 
+  const cc = config.colorConfig;
+  const isTinted = cc?.mode === "tinted";
+
   // ── Icon font: fetch real SVG paths ──
   if (source.type === "icon") {
     const urls = getIconSvgUrls(source.iconSet, source.iconClass);
@@ -173,18 +169,39 @@ export async function renderOdoo17Svg(config: IconConfig): Promise<string> {
         const oy = padding + (innerSize - vbH * scale) / 2 - vbY * scale;
 
         const innerContent = extractInnerContent(svgEl);
+
+        // Tinted: use SVG gradient fill
+        if (isTinted && cc) {
+          const dark = shadeColor(cc.color1, -30);
+          const light = shadeColor(cc.color1, 40);
+          const colored = recolorContent(innerContent, "url(#tintGrad)");
+          return [
+            `<svg width="${targetSize}" height="${targetSize}" viewBox="0 0 ${targetSize} ${targetSize}" xmlns="http://www.w3.org/2000/svg">`,
+            `  <defs>`,
+            `    <linearGradient id="tintGrad" x1="0" y1="0" x2="1" y2="0">`,
+            `      <stop offset="0" stop-color="${dark}"/>`,
+            `      <stop offset="0.5" stop-color="${cc.color1}"/>`,
+            `      <stop offset="1" stop-color="${light}"/>`,
+            `    </linearGradient>`,
+            `  </defs>`,
+            `  <g transform="translate(${ox.toFixed(2)}, ${oy.toFixed(2)}) scale(${scale.toFixed(4)})">`,
+            `    ${colored}`,
+            `  </g>`,
+            `</svg>`,
+          ].join("\n");
+        }
+
+        // Duo / Trio: clip regions
         const parts: string[] = [
           `<svg width="${targetSize}" height="${targetSize}" viewBox="0 0 ${targetSize} ${targetSize}" xmlns="http://www.w3.org/2000/svg">`,
           `  <defs>`,
         ];
 
-        // Define clip paths for each color region
         regions.forEach((r, i) => {
           parts.push(`    <clipPath id="region${i}"><polygon points="${r.clipPoints}"/></clipPath>`);
         });
         parts.push(`  </defs>`);
 
-        // Draw the icon once per region, clipped to that region's area
         regions.forEach((r, i) => {
           const colored = recolorContent(innerContent, r.color);
           parts.push(`  <g clip-path="url(#region${i})">`);

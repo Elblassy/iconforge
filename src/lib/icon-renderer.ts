@@ -165,7 +165,19 @@ export class IconRenderer {
       return;
     }
 
-    // Get color regions: each has a clip region and color
+    // Tinted: smooth gradient from dark → main → light
+    if (mode === "tinted") {
+      const dark = shadeColor(cc.color1, -30);
+      const light = shadeColor(cc.color1, 40);
+      const gradient = ctx.createLinearGradient(0, 0, size, 0);
+      gradient.addColorStop(0, dark);
+      gradient.addColorStop(0.5, cc.color1);
+      gradient.addColorStop(1, light);
+      this._drawTextWithFill(ctx, config, size, gradient);
+      return;
+    }
+
+    // Duo / Trio: clip regions
     const regions = this._getColorRegions(cc, size);
 
     for (const region of regions) {
@@ -196,14 +208,8 @@ export class IconRenderer {
     const s = size;
 
     if (cc.mode === "tinted") {
-      const dark = shadeColor(cc.color1, -30);
-      const light = shadeColor(cc.color1, 40);
-      const t = s / 3;
-      return [
-        { clip: [0, 0, t, 0, t, s, 0, s], color: dark },
-        { clip: [t, 0, t * 2, 0, t * 2, s, t, s], color: cc.color1 },
-        { clip: [t * 2, 0, s, 0, s, s, t * 2, s], color: light },
-      ];
+      // Tinted uses a smooth gradient — handled in drawIconWithShadow, not clip regions
+      return [];
     }
 
     if (cc.mode === "complementary") {
@@ -355,6 +361,35 @@ export class IconRenderer {
     this.drawGradient(ctx, size, versionConfig.gradientAlpha);
 
     return canvas;
+  }
+
+  /**
+   * Draw icon text using a custom fillStyle (e.g. CanvasGradient).
+   */
+  private _drawTextWithFill(
+    ctx: CanvasRenderingContext2D,
+    config: IconConfig,
+    size: number,
+    fill: string | CanvasGradient
+  ): void {
+    const { source, fontSize, fontWeight } = config;
+    if (source.type === "image") return;
+
+    ctx.save();
+    ctx.fillStyle = fill;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    if (source.type === "text") {
+      ctx.font = `${fontWeight} ${fontSize}px "${source.fontFamily}"`;
+      ctx.fillText(source.text, size / 2, size / 2);
+    } else if (source.type === "icon") {
+      ctx.font = `${fontWeight} ${fontSize}px "${source.iconSet}"`;
+      const glyph = source.unicodeChar || this._resolveIconUnicode(source.iconClass);
+      if (glyph) ctx.fillText(glyph, size / 2, size / 2);
+    }
+
+    ctx.restore();
   }
 
   // ---------------------------------------------------------------------------
