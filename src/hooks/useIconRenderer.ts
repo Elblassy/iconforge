@@ -132,16 +132,18 @@ export function useIconRenderer(
       doRender();
     }, 16);
 
-    // Retry render after a delay to catch late-loading icon fonts
-    // (fonts may load after the first render, showing a square initially)
-    const retryTimer = setTimeout(() => {
-      if (!cancelled) doRender();
-    }, 600);
+    // Retry renders to catch late-loading icon fonts
+    // Fonts from CDN may take time to download and parse
+    const retryTimer1 = setTimeout(() => { if (!cancelled) doRender(); }, 500);
+    const retryTimer2 = setTimeout(() => { if (!cancelled) doRender(); }, 1500);
+    const retryTimer3 = setTimeout(() => { if (!cancelled) doRender(); }, 3000);
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      clearTimeout(retryTimer);
+      clearTimeout(retryTimer1);
+      clearTimeout(retryTimer2);
+      clearTimeout(retryTimer3);
     };
   }, [config, containerRef]);
 

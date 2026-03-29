@@ -96,23 +96,22 @@ export function loadIconSetCSS(setId: string): Promise<void> {
     link.crossOrigin = "anonymous";
 
     const timer = setTimeout(() => {
-      // Timeout: resolve anyway so rendering can proceed (icon may show as fallback)
+      // Timeout: resolve anyway so rendering can proceed
       console.warn(`Timed out loading CSS for icon set: ${setId}`);
-      loadedCSSUrls.add(set.cssUrl); // mark as attempted to avoid retrying
+      // Do NOT cache failed loads — allow retry on next render
       resolve();
     }, 5000);
 
     link.onload = () => {
       clearTimeout(timer);
-      loadedCSSUrls.add(set.cssUrl);
+      loadedCSSUrls.add(set.cssUrl); // only cache successful loads
       document.fonts.ready.then(() => resolve()).catch(() => resolve());
     };
 
     link.onerror = () => {
       clearTimeout(timer);
-      // Resolve instead of reject — a failed font shouldn't crash rendering
       console.warn(`Failed to load CSS for icon set: ${setId}`);
-      loadedCSSUrls.add(set.cssUrl); // mark as attempted
+      // Do NOT cache — allow retry
       resolve();
     };
 
