@@ -1,0 +1,12 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#0a0e1a"/>
+  <rect x="490" y="120" width="220" height="220" rx="44" fill="#714BC2"/>
+  <rect x="510" y="140" width="85" height="85" rx="16" fill="#985184"/>
+  <rect x="605" y="140" width="85" height="85" rx="16" fill="#FBB945"/>
+  <rect x="510" y="235" width="85" height="85" rx="16" fill="#1AD3BB"/>
+  <rect x="605" y="235" width="85" height="85" rx="16" fill="#F86126"/>
+  <text x="600" y="410" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="700" fill="#ffffff">IconForge</text>
+  <text x="600" y="465" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="#a78bfa">Odoo Icon Builder</text>
+  <text x="600" y="540" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="22" fill="#6b7280">Create beautiful module icons for Odoo 16-19 in seconds</text>
+  <text x="600" y="585" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#9ca3af">iconforge.elblasy.app</text>
+</svg>

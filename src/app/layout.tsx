@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   title: "IconForge — Odoo Icon Builder",
   description:
     "Create beautiful Odoo module icons with multi-color styles, SVG & PNG export. Supports Odoo 16-19. Free and open source by elblasy.app",
+  metadataBase: new URL("https://iconforge.elblasy.app"),
   icons: {
     icon: "/favicon.svg",
   },
@@ -23,6 +24,23 @@ export const metadata: Metadata = {
     description:
       "Create beautiful Odoo module icons with multi-color styles. Free tool by elblasy.app",
     type: "website",
+    url: "https://iconforge.elblasy.app",
+    siteName: "IconForge",
+    images: [
+      {
+        url: "/og-image.svg",
+        width: 1200,
+        height: 630,
+        alt: "IconForge — Odoo Icon Builder",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "IconForge — Odoo Icon Builder",
+    description:
+      "Create beautiful Odoo module icons with multi-color styles. Free tool by elblasy.app",
+    images: ["/og-image.svg"],
   },
 };
 
