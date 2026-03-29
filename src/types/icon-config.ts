@@ -37,6 +37,7 @@ export interface IconColorConfig {
   mode: IconColorMode;
   color1: string; // primary icon color
   color2: string; // secondary color for gradients/splits
+  midpoint: number; // 0-100, where the transition happens (default 50)
 }
 
 export interface IconConfig {

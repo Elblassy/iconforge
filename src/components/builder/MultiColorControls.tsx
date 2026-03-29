@@ -2,6 +2,7 @@
 
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import type { IconColorMode, IconColorConfig } from "@/types/icon-config";
 
 interface MultiColorControlsProps {
@@ -119,6 +120,25 @@ export function MultiColorControls({
         )}
       </div>
 
+      {/* Midpoint slider */}
+      {isTwoColor && (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Balance</Label>
+            <span className="text-xs text-muted-foreground">
+              {colorConfig.midpoint ?? 50}%
+            </span>
+          </div>
+          <Slider
+            min={10}
+            max={90}
+            step={1}
+            value={[colorConfig.midpoint ?? 50]}
+            onValueChange={([v]) => onChange({ ...colorConfig, midpoint: v })}
+          />
+        </div>
+      )}
+
       {/* Live preview swatch */}
       <div className="flex items-center gap-2">
         <Label className="text-xs">Preview:</Label>
@@ -126,6 +146,7 @@ export function MultiColorControls({
           mode={colorConfig.mode}
           color1={colorConfig.color1}
           color2={colorConfig.color2}
+          midpoint={colorConfig.midpoint ?? 50}
         />
       </div>
     </div>
@@ -193,37 +214,40 @@ function ColorPreviewSwatch({
   mode,
   color1,
   color2,
+  midpoint,
 }: {
   mode: IconColorMode;
   color1: string;
   color2: string;
+  midpoint: number;
 }) {
   let bg: string;
+  const m = midpoint;
 
   switch (mode) {
     case "solid":
       bg = color1;
       break;
     case "gradient-diagonal":
-      bg = `linear-gradient(135deg, ${color1}, ${color2})`;
+      bg = `linear-gradient(135deg, ${color1} 0%, ${color1} ${m * 0.6}%, ${color2} ${m + (100 - m) * 0.4}%, ${color2} 100%)`;
       break;
     case "gradient-horizontal":
-      bg = `linear-gradient(90deg, ${color1}, ${color2})`;
+      bg = `linear-gradient(90deg, ${color1} 0%, ${color1} ${m * 0.6}%, ${color2} ${m + (100 - m) * 0.4}%, ${color2} 100%)`;
       break;
     case "gradient-vertical":
-      bg = `linear-gradient(180deg, ${color1}, ${color2})`;
+      bg = `linear-gradient(180deg, ${color1} 0%, ${color1} ${m * 0.6}%, ${color2} ${m + (100 - m) * 0.4}%, ${color2} 100%)`;
       break;
     case "gradient-radial":
-      bg = `radial-gradient(circle, ${color1}, ${color2})`;
+      bg = `radial-gradient(circle, ${color1} ${m * 0.5}%, ${color2} ${m + (100 - m) * 0.5}%)`;
       break;
     case "split-horizontal":
-      bg = `linear-gradient(90deg, ${color1} 50%, ${color2} 50%)`;
+      bg = `linear-gradient(90deg, ${color1} ${m}%, ${color2} ${m}%)`;
       break;
     case "split-vertical":
-      bg = `linear-gradient(180deg, ${color1} 50%, ${color2} 50%)`;
+      bg = `linear-gradient(180deg, ${color1} ${m}%, ${color2} ${m}%)`;
       break;
     case "split-diagonal":
-      bg = `linear-gradient(135deg, ${color1} 50%, ${color2} 50%)`;
+      bg = `linear-gradient(135deg, ${color1} ${m}%, ${color2} ${m}%)`;
       break;
     default:
       bg = color1;

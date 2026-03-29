@@ -24,6 +24,7 @@ export function SidePanel({ config, onUpdate }: SidePanelProps) {
     mode: "solid",
     color1: config.iconColor,
     color2: "#F86126",
+    midpoint: 50,
   };
 
   function handleColorConfigChange(cc: IconColorConfig) {
