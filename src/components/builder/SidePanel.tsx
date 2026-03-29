@@ -45,8 +45,8 @@ export function SidePanel({ config, onUpdate, onReplace }: SidePanelProps) {
     <div className="space-y-4">
       {/* Title */}
       <div>
-        <h2 className="text-lg font-semibold text-primary">Odoo Icon Builder</h2>
-        <p className="text-xs text-muted-foreground">Customize your module icon</p>
+        <h2 className="text-lg font-semibold text-primary">IconForge</h2>
+        <p className="text-xs text-muted-foreground">Odoo Icon Builder</p>
       </div>
 
       {/* Preset templates */}

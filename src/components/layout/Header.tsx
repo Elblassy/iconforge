@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -14,13 +15,23 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4">
-        {/* App title */}
-        <div className="flex flex-1 items-center">
+        {/* App logo + title */}
+        <div className="flex flex-1 items-center gap-2">
           <Link
             href="/"
-            className="text-base font-semibold tracking-tight hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            Odoo Icon Builder
+            {/* App icon — 4 colored squares */}
+            <svg width="28" height="28" viewBox="0 0 32 32" className="shrink-0">
+              <rect width="32" height="32" rx="7" fill="#714BC2"/>
+              <rect x="6" y="6" width="9" height="9" rx="2" fill="#985184"/>
+              <rect x="17" y="6" width="9" height="9" rx="2" fill="#FBB945"/>
+              <rect x="6" y="17" width="9" height="9" rx="2" fill="#1AD3BB"/>
+              <rect x="17" y="17" width="9" height="9" rx="2" fill="#F86126"/>
+            </svg>
+            <span className="text-base font-semibold tracking-tight">
+              IconForge
+            </span>
           </Link>
         </div>
 
@@ -57,6 +68,8 @@ export function Header() {
             className="hidden sm:flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs text-muted-foreground transition-colors hover:text-primary hover:border-primary"
           >
             Powered by
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/elblasy-logo.png" alt="" width={16} height={16} className="rounded-sm" />
             <span className="font-semibold text-foreground">elblasy.app</span>
           </a>
           <ThemeToggle />
