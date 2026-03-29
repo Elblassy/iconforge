@@ -187,6 +187,7 @@ export class IconRenderer {
   /**
    * Define clip regions for multi-color modes.
    * Each region is a polygon (array of x,y pairs) and a color.
+   * Bands run diagonally from top-right to bottom-left across the full canvas.
    */
   private _getColorRegions(
     cc: IconColorConfig,
@@ -197,28 +198,28 @@ export class IconRenderer {
     if (cc.mode === "tinted") {
       const dark = shadeColor(cc.color1, -30);
       const light = shadeColor(cc.color1, 40);
-      // Three diagonal bands: top-left dark, center main, bottom-right light
+      // Three diagonal bands across the full icon
       return [
-        { clip: [0, 0, s * 0.45, 0, 0, s * 0.45], color: dark },
-        { clip: [s * 0.45, 0, s, 0, s, s * 0.55, s * 0.55, s, 0, s, 0, s * 0.45], color: cc.color1 },
-        { clip: [s, s * 0.55, s, s, s * 0.55, s], color: light },
+        { clip: [0, 0, s, 0, s * 0.33, s, 0, s], color: dark },
+        { clip: [s * 0.33, s, s, 0, s, s * 0.33, s * 0.67, s], color: cc.color1 },
+        { clip: [s * 0.67, s, s, s * 0.33, s, s], color: light },
       ];
     }
 
     if (cc.mode === "complementary") {
-      // Diagonal split: top-left = color1, bottom-right = color2
+      // Diagonal split through the middle
       return [
-        { clip: [0, 0, s, 0, 0, s], color: cc.color1 },
-        { clip: [s, 0, s, s, 0, s], color: cc.color2 },
+        { clip: [0, 0, s, 0, s * 0.5, s, 0, s], color: cc.color1 },
+        { clip: [s, 0, s, s, 0, s, s * 0.5, s], color: cc.color2 },
       ];
     }
 
     if (cc.mode === "tricolor") {
-      // Three diagonal bands
+      // Three diagonal bands across the full icon
       return [
-        { clip: [0, 0, s * 0.4, 0, 0, s * 0.4], color: cc.color1 },
-        { clip: [s * 0.4, 0, s, 0, s, s * 0.6, s * 0.6, s, 0, s, 0, s * 0.4], color: cc.color2 },
-        { clip: [s, s * 0.6, s, s, s * 0.6, s], color: cc.color3 },
+        { clip: [0, 0, s, 0, s * 0.33, s, 0, s], color: cc.color1 },
+        { clip: [s * 0.33, s, s, 0, s, s * 0.33, s * 0.67, s], color: cc.color2 },
+        { clip: [s * 0.67, s, s, s * 0.33, s, s], color: cc.color3 },
       ];
     }
 

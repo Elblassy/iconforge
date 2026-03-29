@@ -94,24 +94,24 @@ function getColorRegionsSvg(
     const dark = shadeColor(cc.color1, -30);
     const light = shadeColor(cc.color1, 40);
     return [
-      { color: dark, clipPoints: `0,0 ${s * 0.45},0 0,${s * 0.45}` },
-      { color: cc.color1, clipPoints: `${s * 0.45},0 ${s},0 ${s},${s * 0.55} ${s * 0.55},${s} 0,${s} 0,${s * 0.45}` },
-      { color: light, clipPoints: `${s},${s * 0.55} ${s},${s} ${s * 0.55},${s}` },
+      { color: dark, clipPoints: `0,0 ${s},0 ${s * 0.33},${s} 0,${s}` },
+      { color: cc.color1, clipPoints: `${s * 0.33},${s} ${s},0 ${s},${s * 0.33} ${s * 0.67},${s}` },
+      { color: light, clipPoints: `${s * 0.67},${s} ${s},${s * 0.33} ${s},${s}` },
     ];
   }
 
   if (cc.mode === "complementary") {
     return [
-      { color: cc.color1, clipPoints: `0,0 ${s},0 0,${s}` },
-      { color: cc.color2, clipPoints: `${s},0 ${s},${s} 0,${s}` },
+      { color: cc.color1, clipPoints: `0,0 ${s},0 ${s * 0.5},${s} 0,${s}` },
+      { color: cc.color2, clipPoints: `${s},0 ${s},${s} 0,${s} ${s * 0.5},${s}` },
     ];
   }
 
   if (cc.mode === "tricolor") {
     return [
-      { color: cc.color1, clipPoints: `0,0 ${s * 0.4},0 0,${s * 0.4}` },
-      { color: cc.color2, clipPoints: `${s * 0.4},0 ${s},0 ${s},${s * 0.6} ${s * 0.6},${s} 0,${s} 0,${s * 0.4}` },
-      { color: cc.color3, clipPoints: `${s},${s * 0.6} ${s},${s} ${s * 0.6},${s}` },
+      { color: cc.color1, clipPoints: `0,0 ${s},0 ${s * 0.33},${s} 0,${s}` },
+      { color: cc.color2, clipPoints: `${s * 0.33},${s} ${s},0 ${s},${s * 0.33} ${s * 0.67},${s}` },
+      { color: cc.color3, clipPoints: `${s * 0.67},${s} ${s},${s * 0.33} ${s},${s}` },
     ];
   }
 
