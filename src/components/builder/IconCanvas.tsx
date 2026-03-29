@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import type { IconConfig } from "@/types/icon-config";
 import { useIconRenderer } from "@/hooks/useIconRenderer";
 import { Button } from "@/components/ui/button";
-import { downloadSvg, renderOdoo17Svg } from "@/lib/svg-renderer";
+import { downloadSvg } from "@/lib/svg-renderer";
 import { BatchExport } from "./BatchExport";
 import { saveIcon } from "@/lib/storage";
 import JSZip from "jszip";
@@ -122,8 +122,13 @@ export function IconCanvas({ config }: IconCanvasProps) {
                 const canvas = containerRef.current?.querySelector("canvas");
                 if (!canvas) return;
 
-                // Generate both files
-                const svgString = await renderOdoo17Svg(config);
+                // Generate both files from the live canvas (guaranteed correct)
+                const canvasDataUrl = canvas.toDataURL("image/png");
+                const svgString = [
+                  `<svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">`,
+                  `  <image width="50" height="50" href="${canvasDataUrl}" preserveAspectRatio="xMidYMid meet"/>`,
+                  `</svg>`,
+                ].join("\n");
                 const pngBlob = await new Promise<Blob>((resolve) =>
                   canvas.toBlob((b) => resolve(b!), "image/png")
                 );
