@@ -5,6 +5,12 @@ export interface IconMeta {
   tags?: string[];
 }
 
+export interface GlobalSearchResult extends IconMeta {
+  setId: string;
+  setName: string;
+  fontFamily: string;
+}
+
 export interface IconSet {
   id: string;
   name: string;

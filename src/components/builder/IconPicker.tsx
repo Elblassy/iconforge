@@ -7,8 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getIconSets, loadIconSetMetadata } from "@/lib/icon-sets";
-import type { IconMeta } from "@/lib/icon-sets";
-import { useIconSearch } from "@/hooks/useIconSearch";
+import type { IconMeta, GlobalSearchResult } from "@/lib/icon-sets";
+import { useIconSearch, useGlobalIconSearch } from "@/hooks/useIconSearch";
 import { toast } from "sonner";
 
 const RECENT_KEY = "odoo-icon-builder-recent";
@@ -63,12 +63,18 @@ export function IconPicker({ selectedClass, onSelect }: IconPickerProps) {
   const iconSets = getIconSets();
   const [activeSetId, setActiveSetId] = useState(iconSets[0]?.id ?? "bootstrap");
   const [searchQuery, setSearchQuery] = useState("");
+  const [globalQuery, setGlobalQuery] = useState("");
   const [setStates, setSetStates] = useState<Record<string, IconSetState>>(() =>
     Object.fromEntries(
       iconSets.map((s) => [s.id, { icons: [], loading: false, error: null }])
     )
   );
   const [recentIcons, setRecentIcons] = useState<RecentIcon[]>([]);
+
+  const { results: globalResults, loading: globalLoading, categoryMatch } =
+    useGlobalIconSearch(globalQuery);
+
+  const isGlobalMode = globalQuery.trim().length > 0;
 
   // Load recent icons from localStorage after mount to avoid hydration mismatch
   useEffect(() => {
@@ -121,44 +127,237 @@ export function IconPicker({ selectedClass, onSelect }: IconPickerProps) {
     onSelect(icon.class, icon.unicode, fontFamily);
   }
 
+  function handleGlobalSelect(result: GlobalSearchResult) {
+    const newRecent: RecentIcon = {
+      iconClass: result.class,
+      unicode: result.unicode,
+      iconSet: result.fontFamily,
+    };
+    const updated = addRecentIcon(recentIcons, newRecent);
+    setRecentIcons(updated);
+    saveRecentIcons(updated);
+
+    onSelect(result.class, result.unicode, result.fontFamily);
+  }
+
   return (
     <div className="space-y-2">
-      <Tabs
-        value={activeSetId}
-        onValueChange={(val) => {
-          setActiveSetId(val);
-          setSearchQuery("");
-        }}
-      >
-        <TabsList className="w-full flex-wrap h-auto gap-0.5 p-1">
-          {iconSets.map((set) => (
-            <TabsTrigger key={set.id} value={set.id} className="flex-1 text-xs px-1.5 py-1">
-              {set.name}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      {/* Global search input — always visible at the top */}
+      <div className="space-y-1">
+        <Input
+          placeholder='Search all icons... (try: restaurant, pharmacy, hr)'
+          value={globalQuery}
+          onChange={(e) => setGlobalQuery(e.target.value)}
+          className="h-8 text-sm"
+        />
+        {isGlobalMode && categoryMatch && (
+          <p className="text-xs text-muted-foreground px-0.5">
+            Category: <span className="font-medium text-foreground">{categoryMatch}</span>
+            {" "}— showing semantic matches across all icon sets
+          </p>
+        )}
+      </div>
 
-        {iconSets.map((set) => (
-          <TabsContent key={set.id} value={set.id} className="mt-2">
-            <IconSetPanel
-              setId={set.id}
-              state={setStates[set.id]}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              selectedClass={selectedClass}
-              recentIcons={recentIcons}
-              onSelect={(icon) => handleSelect(icon, set.id)}
-              onRetry={() => {
-                toast.dismiss();
-                loadIcons(set.id);
-              }}
-            />
-          </TabsContent>
-        ))}
-      </Tabs>
+      {isGlobalMode ? (
+        /* Global search results view */
+        <GlobalSearchPanel
+          results={globalResults}
+          loading={globalLoading}
+          selectedClass={selectedClass}
+          onSelect={handleGlobalSelect}
+        />
+      ) : (
+        /* Normal per-set tabbed view */
+        <Tabs
+          value={activeSetId}
+          onValueChange={(val) => {
+            setActiveSetId(val);
+            setSearchQuery("");
+          }}
+        >
+          <TabsList className="w-full flex-wrap h-auto gap-0.5 p-1">
+            {iconSets.map((set) => (
+              <TabsTrigger key={set.id} value={set.id} className="flex-1 text-xs px-1.5 py-1">
+                {set.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {iconSets.map((set) => (
+            <TabsContent key={set.id} value={set.id} className="mt-2">
+              <IconSetPanel
+                setId={set.id}
+                state={setStates[set.id]}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                selectedClass={selectedClass}
+                recentIcons={recentIcons}
+                onSelect={(icon) => handleSelect(icon, set.id)}
+                onRetry={() => {
+                  toast.dismiss();
+                  loadIcons(set.id);
+                }}
+              />
+            </TabsContent>
+          ))}
+        </Tabs>
+      )}
     </div>
   );
 }
+
+/* ─── Global Search Panel ────────────────────────────────────────────── */
+
+interface GlobalSearchPanelProps {
+  results: GlobalSearchResult[];
+  loading: boolean;
+  selectedClass: string;
+  onSelect: (result: GlobalSearchResult) => void;
+}
+
+function GlobalSearchPanel({
+  results,
+  loading,
+  selectedClass,
+  onSelect,
+}: GlobalSearchPanelProps) {
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const COLS = 6;
+
+  function handleGridKeyDown(e: KeyboardEvent<HTMLDivElement>, totalIcons: number) {
+    if (totalIcons === 0) return;
+    let newIndex = focusedIndex;
+
+    switch (e.key) {
+      case "ArrowRight":
+        e.preventDefault();
+        newIndex = Math.min(focusedIndex + 1, totalIcons - 1);
+        break;
+      case "ArrowLeft":
+        e.preventDefault();
+        newIndex = Math.max(focusedIndex - 1, 0);
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        newIndex = Math.min(focusedIndex + COLS, totalIcons - 1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        newIndex = Math.max(focusedIndex - COLS, 0);
+        break;
+      case "Home":
+        e.preventDefault();
+        newIndex = 0;
+        break;
+      case "End":
+        e.preventDefault();
+        newIndex = totalIcons - 1;
+        break;
+      default:
+        return;
+    }
+
+    setFocusedIndex(newIndex);
+    const buttons = gridRef.current?.querySelectorAll<HTMLButtonElement>('button[role="gridcell"]');
+    if (buttons?.[newIndex]) {
+      buttons[newIndex].focus();
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
+        Searching all icon sets...
+      </div>
+    );
+  }
+
+  if (results.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
+        No icons found
+      </div>
+    );
+  }
+
+  return (
+    <ScrollArea className="h-48">
+      <div
+        ref={gridRef}
+        role="grid"
+        aria-label="Global icon search results"
+        className="pr-2 grid grid-cols-6 gap-1"
+        onKeyDown={(e) => handleGridKeyDown(e, results.length)}
+      >
+        {results.map((result, idx) => (
+          <GlobalIconButton
+            key={`${result.setId}-${result.class}`}
+            result={result}
+            isSelected={selectedClass === result.class}
+            onClick={() => {
+              setFocusedIndex(idx);
+              onSelect(result);
+            }}
+            onFocus={() => setFocusedIndex(idx)}
+          />
+        ))}
+      </div>
+    </ScrollArea>
+  );
+}
+
+interface GlobalIconButtonProps {
+  result: GlobalSearchResult;
+  isSelected: boolean;
+  onClick: () => void;
+  onFocus?: () => void;
+}
+
+function GlobalIconButton({ result, isSelected, onClick, onFocus }: GlobalIconButtonProps) {
+  // Short badge label — use abbreviations so they fit
+  const badgeLabel: Record<string, string> = {
+    bootstrap: "BI",
+    remix: "RI",
+    tabler: "TI",
+    fontawesome: "FA",
+    lucide: "LC",
+  };
+  const badge = badgeLabel[result.setId] ?? result.setId.slice(0, 2).toUpperCase();
+
+  return (
+    <button
+      type="button"
+      role="gridcell"
+      aria-label={`${result.name} (${result.setName})`}
+      title={`${result.name} · ${result.setName}`}
+      onClick={onClick}
+      onFocus={onFocus}
+      className={cn(
+        "relative aspect-square flex items-center justify-center rounded border text-base transition-colors",
+        "hover:bg-accent hover:text-accent-foreground",
+        isSelected
+          ? "bg-primary text-primary-foreground border-primary"
+          : "border-transparent bg-muted/40 text-foreground"
+      )}
+    >
+      <i className={result.class} aria-hidden="true" />
+      {/* Set badge — tiny label in the bottom-right corner */}
+      <span
+        className={cn(
+          "absolute bottom-0 right-0 text-[7px] leading-none px-0.5 rounded-tl rounded-br font-mono pointer-events-none",
+          isSelected
+            ? "bg-primary-foreground/20 text-primary-foreground"
+            : "bg-muted text-muted-foreground"
+        )}
+      >
+        {badge}
+      </span>
+    </button>
+  );
+}
+
+/* ─── Per-set tab panel (unchanged) ─────────────────────────────────── */
 
 interface IconSetPanelProps {
   setId: string;
